@@ -1,0 +1,195 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-attribution"
+dynamic = ["version"]
+description = "Django package for tracking campaign conversions with UTM parameters"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+keywords = ["django", "campaign", "tracking", "utm", "conversion", "analytics"]
+authors = [
+    { name = "Younes Oumakhou", email = "younesoumakhousudo@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "Django>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-django>=4.5",
+    "pytest-cov>=4.0",
+    "django-stubs[compatible-mypy]>=4.2",
+    "tox>=4.0",
+    "pre-commit>=3.0",
+]
+docs = [
+    "sphinx>=5.0",
+    "sphinx-rtd-theme>=1.0",
+    "myst-parser>=0.18",
+]
+
+[project.urls]
+
+
+[tool.hatch.version]
+path = "src/django_attribution/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/django_attribution"]
+
+[tool.hatch.envs.default]
+dependencies = [
+    "coverage[toml]>=6.5",
+    "pytest",
+    "pytest-django",
+    "pytest-cov",
+]
+
+[tool.hatch.envs.default.scripts]
+# Testing
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = [
+    "- coverage combine",
+    "coverage report",
+    "coverage html",
+]
+cov = [
+    "test-cov",
+    "cov-report",
+]
+
+# Django management commands
+makemigrations = "python -m django makemigrations --settings=tests.test_settings"
+migrate = "python -m django migrate --settings=tests.test_settings"
+shell = "python -m django shell --settings=tests.test_settings"
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "django-stubs[compatible-mypy]>=4.2.0",
+]
+
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src/django_attribution tests}"
+style = [
+    "ruff check {args:.}",
+    "ruff format --check --diff {args:.}",
+]
+fmt = [
+    "ruff format {args:.}",
+    "ruff check --fix {args:.}",
+]
+all = [
+    "style",
+    "typing",
+]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort
+    "UP",        # pyupgrade
+    "B",         # flake8-bugbear
+    "DJ",        # flake8-django (important for Django!)
+    "C4",        # flake8-comprehensions
+    "SIM",       # flake8-simplify
+]
+ignore = [
+    "S101",   # Use of assert detected
+    "PLR0913", # Too many arguments
+    "D",      # pydocstyle (we'll add this later)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"src/*/migrations/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["django_attribution"]
+
+[tool.coverage.run]
+source_pkgs = ["django_attribution", "tests"]
+branch = true
+parallel = true
+omit = [
+    "src/django_attribution/__init__.py",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.mypy]
+python_version = "3.8"
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.test_settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.test_settings"
+python_files = ["test_*.py", "tests.py"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+]
+testpaths = ["tests"]
