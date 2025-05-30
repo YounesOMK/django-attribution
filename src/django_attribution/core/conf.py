@@ -1,0 +1,44 @@
+from django.conf import settings
+
+from .settings import (
+    DEFAULT_BOT_PATTERNS,
+    DEFAULT_FILTER_BOTS,
+    DEFAULT_LOG_VALIDATION_ERRORS,
+    DEFAULT_MAX_UTM_LENGTH,
+    DEFAULT_UTM_PARAMETERS,
+)
+
+
+class DjangoAttributionSettings:
+    @property
+    def UTM_PARAMETERS(self):
+        return getattr(
+            settings, "DJANGO_ATTRIBUTION_UTM_PARAMETERS", DEFAULT_UTM_PARAMETERS
+        )
+
+    @property
+    def MAX_UTM_LENGTH(self):
+        return getattr(
+            settings, "DJANGO_ATTRIBUTION_MAX_UTM_LENGTH", DEFAULT_MAX_UTM_LENGTH
+        )
+
+    @property
+    def FILTER_BOTS(self):
+        return getattr(settings, "DJANGO_ATTRIBUTION_FILTER_BOTS", DEFAULT_FILTER_BOTS)
+
+    @property
+    def BOT_PATTERNS(self):
+        return getattr(
+            settings, "DJANGO_ATTRIBUTION_BOT_PATTERNS", DEFAULT_BOT_PATTERNS
+        )
+
+    @property
+    def LOG_VALIDATION_ERRORS(self):
+        return getattr(
+            settings,
+            "DJANGO_ATTRIBUTION_LOG_VALIDATION_ERRORS",
+            DEFAULT_LOG_VALIDATION_ERRORS,
+        )
+
+
+django_attribution_settings = DjangoAttributionSettings()
