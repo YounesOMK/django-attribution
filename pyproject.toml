@@ -101,7 +101,7 @@ shell = "python -m django shell --settings=tests.test_settings"
 [tool.hatch.envs.lint]
 detached = true
 dependencies = [
-    "ruff>=0.1.0",
+    "ruff==0.1.11",
     "mypy>=1.0.0",
     "django-stubs[compatible-mypy]>=4.2.0",
 ]
