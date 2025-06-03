@@ -81,8 +81,8 @@ dependencies = [
 
 [tool.hatch.envs.default.scripts]
 # Testing
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
+test = "pytest {args}"
+test-cov = "coverage run -m pytest {args}"
 cov-report = [
     "- coverage combine",
     "coverage report",
@@ -94,9 +94,9 @@ cov = [
 ]
 
 # Django management commands
-makemigrations = "python -m django makemigrations --settings=tests.test_settings"
-migrate = "python -m django migrate --settings=tests.test_settings"
-shell = "python -m django shell --settings=tests.test_settings"
+makemigrations = "python -m django makemigrations --settings=django_attribution.tests.test_settings"
+migrate = "python -m django migrate --settings=django_attribution.tests.test_settings"
+shell = "python -m django shell --settings=django_attribution.tests.test_settings"
 
 [tool.hatch.envs.lint]
 detached = true
@@ -124,7 +124,7 @@ all = [
 [tool.ruff]
 target-version = "py38"
 line-length = 88
-src = ["src", "tests"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = [
@@ -144,7 +144,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"src/django_attribution/tests/*" = ["S101"]
 "src/*/migrations/*" = ["E501"]
 
 [tool.ruff.lint.isort]
@@ -181,15 +181,16 @@ warn_redundant_casts = true
 plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
-django_settings_module = "tests.test_settings"
+django_settings_module = "django_attribution.tests.test_settings"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "tests.test_settings"
+DJANGO_SETTINGS_MODULE = "django_attribution.tests.test_settings"
 python_files = ["test_*.py", "tests.py"]
+pythonpath = ["src"]
 addopts = [
     "--strict-markers",
     "--strict-config",
     "--verbose",
     "--tb=short",
 ]
-testpaths = ["tests"]
+testpaths = ["src/django_attribution/tests"]
