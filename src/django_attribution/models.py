@@ -1,5 +1,7 @@
 import uuid
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
@@ -7,10 +9,8 @@ from django.utils import timezone
 class Identity(models.Model):
     class TrackingMethod(models.TextChoices):
         COOKIE = "cookie", "Cookie Based"
-        BROWSER_SIGNATURE = "browser_signature", "Browser Signature Based"
-        TOKEN = "token", "Token Based"
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     identity_value = models.CharField(max_length=255, db_index=True)
     tracking_method = models.CharField(
         max_length=20,
@@ -62,25 +62,21 @@ class Identity(models.Model):
 
 
 class Touchpoint(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     identity = models.ForeignKey(
         Identity, on_delete=models.CASCADE, related_name="touchpoints"
     )
 
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
-
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
     page_title = models.CharField(max_length=255, blank=True)
-
     utm_source = models.CharField(max_length=255, blank=True, db_index=True)
     utm_medium = models.CharField(max_length=255, blank=True, db_index=True)
     utm_campaign = models.CharField(max_length=255, blank=True, db_index=True)
     utm_term = models.CharField(max_length=255, blank=True)
     utm_content = models.CharField(max_length=255, blank=True)
-
     custom_parameters = models.JSONField(default=dict, blank=True)
-
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
 
@@ -93,3 +89,43 @@ class Touchpoint(models.Model):
 
     def __str__(self):
         return f"{self.utm_source or 'direct'} ({self.created_at})"
+
+
+class Conversion(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    identity = models.ForeignKey(
+        Identity, on_delete=models.CASCADE, related_name="conversions"
+    )
+
+    conversion_type = models.CharField(max_length=255, db_index=True)
+    conversion_value = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    currency = models.CharField(max_length=3, default="USD", blank=True)
+
+    custom_data = models.JSONField(default=dict, blank=True)
+
+    source_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="conversions_as_source_object",
+    )
+    source_object_id = models.PositiveIntegerField()
+    source_object = GenericForeignKey("source_content_type", "source_object_id")
+
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["identity", "created_at"]),
+            models.Index(fields=["conversion_type", "created_at"]),
+            models.Index(fields=["source_content_type", "source_object_id"]),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        value_str = f" (${self.conversion_value})" if self.conversion_value else ""
+        return f"{self.conversion_type}{value_str} - {self.created_at}"
+
+    def is_monetary(self):
+        return self.conversion_value is not None and self.conversion_value > 0
