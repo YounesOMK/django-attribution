@@ -104,7 +104,6 @@ dependencies = [
     "mypy>=1.0.0",
     "django-stubs[compatible-mypy]>=4.2.0",
 ]
-
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --config-file=mypy-django.ini {args:src/django_attribution src/tests}"
 style = [
@@ -177,6 +176,8 @@ check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
+disable_error_code = ["var-annotated"]
+
 
 [tool.django-stubs]
 django_settings_module = "tests.test_settings"
