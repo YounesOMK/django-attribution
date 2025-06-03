@@ -106,7 +106,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive --config-file=pyproject.toml --plugin mypy_django_plugin.main {args:src/django_attribution tests}"
+typing = "mypy --config-file=mypy-django.ini {args:src/django_attribution tests}"
 style = [
     "ruff check {args:.}",
     "ruff format --check --diff {args:.}",
