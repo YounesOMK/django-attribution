@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from django.test import RequestFactory
 
-from django_attribution.core.middlewares import UTMParameterMiddleware
+from django_attribution.middlewares import UTMParameterMiddleware
 
 
 @pytest.fixture

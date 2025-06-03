@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django_attribution.core.conf import django_attribution_settings
+from django_attribution.conf import django_attribution_settings
 
 
 def test_should_extract_all_standard_utm_parameters(middleware, make_request):
@@ -82,7 +82,7 @@ def test_should_enforce_maximum_length_limit(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    with patch("django_attribution.core.middlewares.logger") as mock_logger:
+    with patch("django_attribution.middlewares.logger") as mock_logger:
         middleware.process_request(request)
 
         mock_logger.warning.assert_called_with(
@@ -191,7 +191,7 @@ def test_should_log_validation_errors_appropriately(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    with patch("django_attribution.core.middlewares.logger") as mock_logger:
+    with patch("django_attribution.middlewares.logger") as mock_logger:
         middleware.process_request(request)
 
         mock_logger.warning.assert_called_with(
@@ -205,7 +205,7 @@ def test_should_be_defensive_against_unexpected_exceptions(middleware, make_requ
     with patch.object(middleware, "_validate_utm_value") as mock_validate:
         mock_validate.side_effect = Exception("Unexpected error")
 
-        with patch("django_attribution.core.middlewares.logger") as mock_logger:
+        with patch("django_attribution.middlewares.logger") as mock_logger:
             middleware.process_request(request)
 
             mock_logger.warning.assert_called()
