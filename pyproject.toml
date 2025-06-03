@@ -94,12 +94,11 @@ cov = [
 ]
 
 # Django management commands
-makemigrations = "python -m django makemigrations --settings=django_attribution.tests.test_settings"
-migrate = "python -m django migrate --settings=django_attribution.tests.test_settings"
-shell = "python -m django shell --settings=django_attribution.tests.test_settings"
+makemigrations = "python -m django makemigrations --settings=tests.test_settings"
+migrate = "python -m django migrate --settings=tests.test_settings"
+shell = "python -m django shell --settings=tests.test_settings"
 
 [tool.hatch.envs.lint]
-detached = true
 dependencies = [
     "ruff==0.1.11",
     "mypy>=1.0.0",
@@ -107,7 +106,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:src/django_attribution tests}"
+typing = "mypy --install-types --non-interactive --config-file=pyproject.toml --plugin mypy_django_plugin.main {args:src/django_attribution tests}"
 style = [
     "ruff check {args:.}",
     "ruff format --check --diff {args:.}",
@@ -144,14 +143,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"src/django_attribution/tests/*" = ["S101"]
+"tests/*" = ["S101"]
 "src/*/migrations/*" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["django_attribution"]
 
 [tool.coverage.run]
-source_pkgs = ["django_attribution", "tests"]
+source_pkgs = ["django_attribution"]
 branch = true
 parallel = true
 omit = [
@@ -178,14 +177,12 @@ check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
-django_settings_module = "django_attribution.tests.test_settings"
+django_settings_module = "tests.test_settings"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "django_attribution.tests.test_settings"
-python_files = ["test_*.py", "tests.py"]
+DJANGO_SETTINGS_MODULE = "tests.test_settings"
 pythonpath = ["src"]
 addopts = [
     "--strict-markers",
@@ -193,4 +190,4 @@ addopts = [
     "--verbose",
     "--tb=short",
 ]
-testpaths = ["src/django_attribution/tests"]
+testpaths = ["tests"]

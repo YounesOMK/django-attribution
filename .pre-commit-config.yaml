@@ -24,10 +24,5 @@ repos:
     rev: v1.8.0
     hooks:
       - id: mypy
-        additional_dependencies: [
-          "django-stubs[compatible-mypy]",
-          "Django>=3.2"
-        ]
+        additional_dependencies: ["django-stubs[compatible-mypy]"]
         args: [--config-file=pyproject.toml]
-        pass_filenames: false
-        entry: bash -c 'pip install -e . && mypy src/django_attribution'
