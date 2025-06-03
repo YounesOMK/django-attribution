@@ -6,6 +6,7 @@ from .settings import (
     DEFAULT_LOG_VALIDATION_ERRORS,
     DEFAULT_MAX_UTM_LENGTH,
     DEFAULT_UTM_PARAMETERS,
+    DJANGO_ATTRIBUTION_CURRENCY,
 )
 
 
@@ -38,6 +39,12 @@ class DjangoAttributionSettings:
             settings,
             "DJANGO_ATTRIBUTION_LOG_VALIDATION_ERRORS",
             DEFAULT_LOG_VALIDATION_ERRORS,
+        )
+
+    @property
+    def CURRENCY(self):
+        return getattr(
+            settings, "DJANGO_ATTRIBUTION_CURRENCY", DJANGO_ATTRIBUTION_CURRENCY
         )
 
 

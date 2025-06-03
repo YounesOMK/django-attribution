@@ -54,3 +54,6 @@ DEFAULT_BOT_PATTERNS = [
 
 # Whether to log validation warnings
 DEFAULT_LOG_VALIDATION_ERRORS = True
+
+# Default currency for conversions
+DJANGO_ATTRIBUTION_CURRENCY = "EUR"

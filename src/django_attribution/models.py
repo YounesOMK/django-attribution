@@ -6,6 +6,12 @@ from django.db import models
 from django.utils import timezone
 
 
+def get_default_currency():
+    from django_attribution.conf import django_attribution_settings
+
+    return django_attribution_settings.CURRENCY
+
+
 class Identity(models.Model):
     class TrackingMethod(models.TextChoices):
         COOKIE = "cookie", "Cookie Based"
@@ -101,7 +107,7 @@ class Conversion(models.Model):
     conversion_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
     )
-    currency = models.CharField(max_length=3, default="USD", blank=True)
+    currency = models.CharField(max_length=3, default=get_default_currency, blank=True)
 
     custom_data = models.JSONField(default=dict, blank=True)
 
@@ -124,7 +130,10 @@ class Conversion(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        value_str = f" (${self.conversion_value})" if self.conversion_value else ""
+        if self.conversion_value:
+            value_str = f" ({self.currency} {self.conversion_value})"
+        else:
+            value_str = ""
         return f"{self.conversion_type}{value_str} - {self.created_at}"
 
     def is_monetary(self):
