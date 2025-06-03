@@ -184,7 +184,7 @@ django_settings_module = "tests.test_settings"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.test_settings"
-pythonpath = ["src"]
+pythonpath = ["."]
 addopts = [
     "--strict-markers",
     "--strict-config",
