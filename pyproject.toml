@@ -105,7 +105,7 @@ dependencies = [
     "django-stubs[compatible-mypy]>=4.2.0",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --config-file=mypy-django.ini {args:src/django_attribution src/tests}"
+typing = "mypy --config-file=mypy-django.ini {args:src/django_attribution tests}"
 style = [
     "ruff check {args:.}",
     "ruff format --check --diff {args:.}",
