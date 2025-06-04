@@ -60,8 +60,11 @@ DEFAULT_DJANGO_ATTRIBUTION_CURRENCY = "EUR"
 
 
 # EXLUDED URLS
-DEFAULT_DJANGO_ATTRIBUTION_EXCLUDED_URLS = [
+DEFAULT_EXCLUDED_URLS = [
     "/admin/",
     "/api/",
     "/health/",
 ]
+
+# Default attribution window days
+DEFAULT_WINDOW_DAYS = 30
