@@ -6,6 +6,7 @@ from urllib.parse import unquote_plus
 from django.http import HttpResponse
 
 from .conf import django_attribution_settings
+from .managers import AttributionManager
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
 from .trackers import SessionIdentityTracker
@@ -63,17 +64,6 @@ class UTMParameterMiddleware(RequestExclusionMixin):
             if django_attribution_settings.LOG_VALIDATION_ERRORS:
                 logger.warning(f"Error processing UTM parameter {param_name}: {e}")
             return None
-
-
-class AttributionManager:
-    def __init__(self, identity: Identity, request: AttributionHttpRequest):
-        self.identity = identity
-        self.request = request
-
-    def track_conversion(self, event: str, **kwargs):
-        """Track a conversion event - will be implemented next"""
-        # TODO: Implement conversion tracking with attribution window (30 days for now)
-        pass
 
 
 class AttributionMiddleware(RequestExclusionMixin):
