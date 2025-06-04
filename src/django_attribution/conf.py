@@ -2,11 +2,12 @@ from django.conf import settings
 
 from .settings import (
     DEFAULT_BOT_PATTERNS,
+    DEFAULT_DJANGO_ATTRIBUTION_CURRENCY,
+    DEFAULT_DJANGO_ATTRIBUTION_EXCLUDED_URLS,
     DEFAULT_FILTER_BOTS,
     DEFAULT_LOG_VALIDATION_ERRORS,
     DEFAULT_MAX_UTM_LENGTH,
     DEFAULT_UTM_PARAMETERS,
-    DJANGO_ATTRIBUTION_CURRENCY,
 )
 
 
@@ -44,7 +45,15 @@ class DjangoAttributionSettings:
     @property
     def CURRENCY(self):
         return getattr(
-            settings, "DJANGO_ATTRIBUTION_CURRENCY", DJANGO_ATTRIBUTION_CURRENCY
+            settings, "DJANGO_ATTRIBUTION_CURRENCY", DEFAULT_DJANGO_ATTRIBUTION_CURRENCY
+        )
+
+    @property
+    def EXCLUDED_URLS(self):
+        return getattr(
+            settings,
+            "DJANGO_ATTRIBUTION_EXCLUDED_URLS",
+            DEFAULT_DJANGO_ATTRIBUTION_EXCLUDED_URLS,
         )
 
 
