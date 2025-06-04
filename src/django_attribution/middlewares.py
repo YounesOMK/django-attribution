@@ -1,6 +1,6 @@
 import logging
 import uuid
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
@@ -10,7 +10,11 @@ from .managers import AttributionManager
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
 from .trackers import SessionIdentityTracker
-from .types import AttributionHttpRequest
+
+if TYPE_CHECKING:
+    from typing import Dict, Optional
+
+    from .types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 

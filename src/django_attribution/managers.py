@@ -1,5 +1,9 @@
+from typing import TYPE_CHECKING
+
 from .models import Identity
-from .types import AttributionHttpRequest
+
+if TYPE_CHECKING:
+    from .types import AttributionHttpRequest
 
 
 class AttributionManager:
