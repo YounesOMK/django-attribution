@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class AttributionManager:
-    def __init__(self, identity: Identity, request: AttributionHttpRequest):
+    def __init__(self, identity: Identity, request: "AttributionHttpRequest"):
         self.identity = identity
         self.request = request
 

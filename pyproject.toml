@@ -176,7 +176,7 @@ check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-disable_error_code = ["var-annotated"]
+plugins = ["mypy_django_plugin.main"]
 
 
 [tool.django-stubs]
@@ -191,4 +191,4 @@ addopts = [
     "--verbose",
     "--tb=short",
 ]
-testpaths = ["src/tests"]
+testpaths = ["tests"]

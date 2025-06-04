@@ -23,7 +23,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
+    def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
         if self._is_excluded_request(request):
             return self.get_response(request)
 
@@ -34,8 +34,8 @@ class UTMParameterMiddleware(RequestExclusionMixin):
         return response
 
     def _extract_utm_parameters(
-        self, request: AttributionHttpRequest
-    ) -> Dict[str, str]:
+        self, request: "AttributionHttpRequest"
+    ) -> "Dict[str, str]":
         utm_params = {}
         for param in django_attribution_settings.UTM_PARAMETERS:
             value = request.GET.get(param, "").strip()
@@ -50,7 +50,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
                     continue
         return utm_params
 
-    def _validate_utm_value(self, value: str, param_name: str) -> Optional[str]:
+    def _validate_utm_value(self, value: str, param_name: str) -> "Optional[str]":
         try:
             decoded = unquote_plus(value)
 
@@ -77,7 +77,7 @@ class AttributionMiddleware(RequestExclusionMixin):
         self.get_response = get_response
         self.tracker = SessionIdentityTracker()
 
-    def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
+    def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
         if self._is_excluded_request(request):
             return self.get_response(request)
 
@@ -102,7 +102,7 @@ class AttributionMiddleware(RequestExclusionMixin):
         # Process response after view (if needed)
         return response
 
-    def _get_or_create_identity(self, request: AttributionHttpRequest) -> Identity:
+    def _get_or_create_identity(self, request: "AttributionHttpRequest") -> Identity:
         """Get existing attribution identity or create new one"""
         # Try to get attribution UUID from session
         attribution_uuid = request.session.get(self.ATTRIBUTION_SESSION_KEY)
@@ -133,7 +133,7 @@ class AttributionMiddleware(RequestExclusionMixin):
         return identity
 
     def _create_touchpoint(
-        self, identity: Identity, request: AttributionHttpRequest, utm_params: dict
+        self, identity: Identity, request: "AttributionHttpRequest", utm_params: dict
     ) -> Touchpoint:
         """Create a touchpoint for this identity with UTM parameters"""
         return Touchpoint.objects.create(
@@ -149,7 +149,7 @@ class AttributionMiddleware(RequestExclusionMixin):
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
 
-    def _get_client_ip(self, request: AttributionHttpRequest) -> Optional[str]:
+    def _get_client_ip(self, request: "AttributionHttpRequest") -> "Optional[str]":
         """Extract client IP address from request"""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
