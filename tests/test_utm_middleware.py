@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.http import HttpResponse
+
 from django_attribution.conf import django_attribution_settings
 
 
@@ -13,7 +15,7 @@ def test_should_extract_all_standard_utm_parameters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
@@ -21,7 +23,7 @@ def test_should_extract_all_standard_utm_parameters(middleware, make_request):
 def test_should_handle_missing_utm_parameters_gracefully(middleware, make_request):
     request = make_request(other_params={"other_param": "value"})
 
-    middleware.process_request(request)
+    middleware(request)
 
     assert request.META["utm_params"] == {}
 
@@ -33,7 +35,7 @@ def test_should_extract_partial_utm_parameters(middleware, make_request):
         utm_params=utm_params, other_params={"other_param": "ignored"}
     )
 
-    middleware.process_request(request)
+    middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
@@ -49,7 +51,7 @@ def test_should_ignore_empty_and_whitespace_only_parameters(middleware, make_req
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {"utm_source": "google", "utm_content": "valid_content"}
     assert request.META["utm_params"] == expected_params
@@ -64,7 +66,7 @@ def test_should_url_decode_utm_parameters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {
         "utm_source": "google ads",
@@ -83,7 +85,7 @@ def test_should_enforce_maximum_length_limit(middleware, make_request):
     request = make_request(utm_params=utm_params)
 
     with patch("django_attribution.middlewares.logger") as mock_logger:
-        middleware.process_request(request)
+        middleware(request)
 
         mock_logger.warning.assert_called_with(
             "UTM parameter utm_source exceeds maximum length"
@@ -101,7 +103,7 @@ def test_should_sanitize_non_printable_characters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {
         "utm_source": "googleads",
@@ -120,7 +122,7 @@ def test_should_normalize_whitespace(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {
         "utm_source": "google ads",
@@ -140,7 +142,7 @@ def test_should_handle_unicode_characters_properly(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
@@ -155,7 +157,7 @@ def test_should_process_case_sensitive_parameters(middleware, make_request):
     }
     request = make_request(other_params=all_params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {"utm_source": "facebook", "utm_campaign": "summer"}
     assert request.META["utm_params"] == expected_params
@@ -165,9 +167,9 @@ def test_should_not_interfere_with_other_request_processing(middleware, make_req
     request = make_request(utm_params={"utm_source": "google"})
     original_get_params = dict(request.GET)
 
-    result = middleware.process_request(request)
+    result = middleware(request)
 
-    assert result is None
+    assert isinstance(result, HttpResponse)
     assert dict(request.GET) == original_get_params
     assert "utm_params" in request.META
 
@@ -178,7 +180,7 @@ def test_should_handle_extremely_long_parameter_lists(middleware, request_factor
 
     request = request_factory.get("/", params)
 
-    middleware.process_request(request)
+    middleware(request)
 
     expected_params = {"utm_source": "google", "utm_campaign": "test"}
     assert request.META["utm_params"] == expected_params
@@ -192,7 +194,7 @@ def test_should_log_validation_errors_appropriately(middleware, make_request):
     request = make_request(utm_params=utm_params)
 
     with patch("django_attribution.middlewares.logger") as mock_logger:
-        middleware.process_request(request)
+        middleware(request)
 
         mock_logger.warning.assert_called_with(
             "UTM parameter utm_source exceeds maximum length"
@@ -206,7 +208,7 @@ def test_should_be_defensive_against_unexpected_exceptions(middleware, make_requ
         mock_validate.side_effect = Exception("Unexpected error")
 
         with patch("django_attribution.middlewares.logger") as mock_logger:
-            middleware.process_request(request)
+            middleware(request)
 
             mock_logger.warning.assert_called()
             assert request.META["utm_params"] == {}
@@ -259,7 +261,7 @@ def test_should_ignore_requests_from_robots_and_crawlers(middleware, make_reques
         request = make_request(utm_params=utm_params)
         request.META["HTTP_USER_AGENT"] = user_agent
 
-        middleware.process_request(request)
+        middleware(request)
 
         assert (
             request.META.get("utm_params", {}) == {}

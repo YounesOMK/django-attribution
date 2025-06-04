@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+from django.http import HttpResponse
 from django.test import RequestFactory
 
 from django_attribution.middlewares import UTMParameterMiddleware
@@ -8,7 +9,7 @@ from django_attribution.middlewares import UTMParameterMiddleware
 
 @pytest.fixture
 def middleware():
-    get_response = Mock()
+    get_response = Mock(return_value=HttpResponse("OK"))
     return UTMParameterMiddleware(get_response)
 
 
