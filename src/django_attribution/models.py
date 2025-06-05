@@ -71,8 +71,11 @@ class Identity(BaseModel):
             return self.merged_into.get_canonical_identity()
         return self
 
-    def is_merged(self):
+    def is_merged(self) -> bool:
         return self.merged_into is not None
+
+    def is_canonical(self) -> bool:
+        return self.merged_into is None
 
 
 class Touchpoint(BaseModel):

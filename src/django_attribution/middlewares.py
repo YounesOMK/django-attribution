@@ -80,10 +80,14 @@ class AttributionMiddleware(RequestExclusionMixin):
 
         try:
             identity = self._get_or_create_identity(request)
-
             utm_params = request.META.get("utm_params", {})
+
             if utm_params:
                 self._create_touchpoint(identity, request, utm_params)
+                if request.user.is_authenticated:
+                    from .reconciliation import resolve_user_identity
+
+                    identity = resolve_user_identity(request, identity, self.tracker)
 
             request.attribution = AttributionManager(identity, request, self.tracker)
 

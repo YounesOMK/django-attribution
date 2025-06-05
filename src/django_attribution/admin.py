@@ -38,9 +38,10 @@ class ConversionInline(admin.TabularInline):
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
     list_display = (
-        "tracking_method",
         "linked_user",
+        "tracking_method",
         "created_at",
+        "is_canonical",
     )
     list_filter = (
         "tracking_method",
