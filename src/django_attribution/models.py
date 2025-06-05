@@ -5,6 +5,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
+from django_attribution.querysets import (
+    ConversionQuerySet,
+    IdentityQuerySet,
+    TouchpointQuerySet,
+)
+
 
 def get_default_currency():
     from django_attribution.conf import django_attribution_settings
@@ -12,11 +18,19 @@ def get_default_currency():
     return django_attribution_settings.CURRENCY
 
 
-class Identity(models.Model):
+class BaseModel(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        abstract = True
+
+
+class Identity(BaseModel):
     class TrackingMethod(models.TextChoices):
         COOKIE = "cookie", "Cookie Based"
 
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     tracking_method = models.CharField(
         max_length=20,
         choices=TrackingMethod.choices,
@@ -32,7 +46,6 @@ class Identity(models.Model):
         related_name="merged_identities",
     )
 
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     last_visit_at = models.DateTimeField(default=timezone.now, db_index=True)
 
     linked_user = models.ForeignKey(
@@ -42,6 +55,8 @@ class Identity(models.Model):
         blank=True,
         related_name="attribution_identities",
     )
+
+    objects = IdentityQuerySet.as_manager()
 
     class Meta:
         verbose_name_plural = "Identities"
@@ -62,13 +77,11 @@ class Identity(models.Model):
         return self.merged_into is not None
 
 
-class Touchpoint(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+class Touchpoint(BaseModel):
     identity = models.ForeignKey(
         Identity, on_delete=models.CASCADE, related_name="touchpoints"
     )
 
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
     page_title = models.CharField(max_length=255, blank=True)
@@ -81,6 +94,8 @@ class Touchpoint(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
 
+    objects = TouchpointQuerySet.as_manager()
+
     class Meta:
         indexes = [
             models.Index(fields=["identity", "created_at"]),
@@ -92,8 +107,7 @@ class Touchpoint(models.Model):
         return f"{self.utm_source or 'direct'} ({self.created_at})"
 
 
-class Conversion(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+class Conversion(BaseModel):
     identity = models.ForeignKey(
         Identity, on_delete=models.CASCADE, related_name="conversions"
     )
@@ -114,7 +128,7 @@ class Conversion(models.Model):
     source_object_id = models.PositiveIntegerField()
     source_object = GenericForeignKey("source_content_type", "source_object_id")
 
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    objects = ConversionQuerySet.as_manager()
 
     class Meta:
         indexes = [
