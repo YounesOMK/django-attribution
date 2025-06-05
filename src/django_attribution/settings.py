@@ -1,4 +1,3 @@
-# UTM Parameters to extract
 DEFAULT_UTM_PARAMETERS = [
     "utm_source",
     "utm_medium",
@@ -7,13 +6,10 @@ DEFAULT_UTM_PARAMETERS = [
     "utm_content",
 ]
 
-# Maximum length for UTM parameter values
 DEFAULT_MAX_UTM_LENGTH = 200
 
-# Whether to filter out bot/crawler requests
 DEFAULT_FILTER_BOTS = True
 
-# Bot patterns for user agent detection
 DEFAULT_BOT_PATTERNS = [
     # Generic patterns
     "bot",
@@ -52,21 +48,17 @@ DEFAULT_BOT_PATTERNS = [
     "ia_archiver",
 ]
 
-# Whether to log validation warnings
 DEFAULT_LOG_VALIDATION_ERRORS = True
 
-# Default currency for conversions
 DEFAULT_DJANGO_ATTRIBUTION_CURRENCY = "EUR"
 
 
-# EXLUDED URLS
 DEFAULT_EXCLUDED_URLS = [
     "/admin/",
     "/api/",
     "/health/",
 ]
 
-# Default attribution window days
 DEFAULT_WINDOW_DAYS = 30
 
 

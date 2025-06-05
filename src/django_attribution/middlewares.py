@@ -102,8 +102,6 @@ class AttributionMiddleware(RequestExclusionMixin):
             return response
 
     def _get_or_create_identity(self, request: "AttributionHttpRequest") -> Identity:
-        """Get existing attribution identity or create new one"""
-        # Try to get attribution UUID from session
         attribution_uuid = self.tracker.get_identity_reference(request)
 
         if attribution_uuid:
@@ -116,7 +114,7 @@ class AttributionMiddleware(RequestExclusionMixin):
                 canonical_identity = identity.get_canonical_identity()
 
                 if canonical_identity != identity:
-                    self.tracker.update_identity_reference(request, canonical_identity)
+                    self.tracker.set_identity_reference(request, canonical_identity)
                     logger.debug(
                         "Updated cookie to"
                         "canonical identity: {canonical_identity.uuid}"
@@ -143,7 +141,6 @@ class AttributionMiddleware(RequestExclusionMixin):
     def _create_touchpoint(
         self, identity: Identity, request: "AttributionHttpRequest", utm_params: dict
     ) -> Touchpoint:
-        """Create a touchpoint for this identity with UTM parameters"""
         return Touchpoint.objects.create(
             identity=identity,
             url=request.build_absolute_uri(),
@@ -158,7 +155,6 @@ class AttributionMiddleware(RequestExclusionMixin):
         )
 
     def _get_client_ip(self, request: "AttributionHttpRequest") -> "Optional[str]":
-        """Extract client IP address from request"""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
             return x_forwarded_for.split(",")[0].strip()

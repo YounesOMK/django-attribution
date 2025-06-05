@@ -29,7 +29,7 @@ def handle_attribution_on_login(sender, request, user, **kwargs):
         _merge_identities(
             from_identity=current_identity, to_identity=existing_user_identity
         )
-        tracker.update_identity_reference(request, existing_user_identity)
+        tracker.set_identity_reference(request, existing_user_identity)
         request.attribution.identity = existing_user_identity
         logger.info(
             "Merged anonymous identity"

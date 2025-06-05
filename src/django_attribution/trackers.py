@@ -23,13 +23,6 @@ class IdentityTracker(ABC):
         pass
 
     @abstractmethod
-    def update_identity_reference(
-        self, request: HttpRequest, new_identity: Identity
-    ) -> None:
-        """Queue updating identity reference for response"""
-        pass
-
-    @abstractmethod
     def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
         """Apply any pending operations to the response"""
         pass
@@ -63,14 +56,6 @@ class CookieIdentityTracker(IdentityTracker):
         self._pending_cookie_value = str(identity.uuid)
         self._should_set_cookie = True
         logger.debug(f"Queued setting attribution cookie to: {identity.uuid}")
-
-    def update_identity_reference(
-        self, request: HttpRequest, new_identity: Identity
-    ) -> None:
-        """Queue updating the attribution cookie"""
-        self._pending_cookie_value = str(new_identity.uuid)
-        self._should_set_cookie = True
-        logger.debug(f"Queued updating attribution cookie to: {new_identity.uuid}")
 
     def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
         """Apply pending cookie operations to the response"""
