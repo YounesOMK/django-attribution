@@ -1,5 +1,4 @@
 import logging
-import uuid
 from typing import TYPE_CHECKING
 from urllib.parse import unquote_plus
 
@@ -9,7 +8,7 @@ from .conf import django_attribution_settings
 from .managers import AttributionManager
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
-from .trackers import SessionIdentityTracker
+from .trackers import CookieIdentityTracker
 
 if TYPE_CHECKING:
     from typing import Dict, Optional
@@ -75,37 +74,37 @@ class AttributionMiddleware(RequestExclusionMixin):
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.tracker = SessionIdentityTracker()
+        self.tracker = CookieIdentityTracker()
 
     def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
         if self._is_excluded_request(request):
             return self.get_response(request)
 
-        # Process request before view
-        # Get or create attribution identity
-        identity = self._get_or_create_identity(request)
+        try:
+            identity = self._get_or_create_identity(request)
 
-        # Create touchpoint only if UTM params exist
-        utm_params = request.META.get("utm_params", {})
-        if utm_params:
-            self._create_touchpoint(identity, request, utm_params)
+            utm_params = request.META.get("utm_params", {})
+            if utm_params:
+                self._create_touchpoint(identity, request, utm_params)
 
-        # TODO: Update identity.last_visit_at on every request or only with touchpoints?
-        # For now, commenting this out - decide strategy later
+            request.attribution = AttributionManager(identity, request, self.tracker)
 
-        # Attach attribution manager to request
-        request.attribution = AttributionManager(identity, request)
+            response = self.get_response(request)
 
-        # Call the view
-        response = self.get_response(request)
+            self.tracker.apply_to_response(request, response)
 
-        # Process response after view (if needed)
-        return response
+            return response
+
+        except Exception as e:
+            logger.error(f"Attribution middleware error: {e}", exc_info=True)
+            # Don't break the request if attribution fails
+            response = self.get_response(request)
+            return response
 
     def _get_or_create_identity(self, request: "AttributionHttpRequest") -> Identity:
         """Get existing attribution identity or create new one"""
         # Try to get attribution UUID from session
-        attribution_uuid = request.session.get(self.ATTRIBUTION_SESSION_KEY)
+        attribution_uuid = self.tracker.get_identity_reference(request)
 
         if attribution_uuid:
             try:
@@ -113,15 +112,23 @@ class AttributionMiddleware(RequestExclusionMixin):
                     uuid=attribution_uuid,
                     tracking_method=Identity.TrackingMethod.COOKIE,
                 )
-                # Check if this identity was merged - follow chain to canonical
-                return identity.get_canonical_identity()
+
+                canonical_identity = identity.get_canonical_identity()
+
+                if canonical_identity != identity:
+                    self.tracker.update_identity_reference(request, canonical_identity)
+                    logger.debug(
+                        "Updated cookie to"
+                        "canonical identity: {canonical_identity.uuid}"
+                    )
+
+                return canonical_identity
+
             except Identity.DoesNotExist:
-                # Session had invalid UUID, create new one
-                pass
+                logger.debug(f"Identity not found for UUID: {attribution_uuid}")
 
         # Create new identity
         identity = Identity.objects.create(
-            identity_value=str(uuid.uuid4()),
             tracking_method=Identity.TrackingMethod.COOKIE,
             first_ip_address=self._get_client_ip(request),
             first_user_agent=request.META.get("HTTP_USER_AGENT", ""),
@@ -129,6 +136,7 @@ class AttributionMiddleware(RequestExclusionMixin):
 
         # Store in session
         self.tracker.set_identity_reference(request, identity)
+        logger.debug(f"Created new attribution identity: {identity.uuid}")
 
         return identity
 

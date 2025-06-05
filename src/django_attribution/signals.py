@@ -19,6 +19,8 @@ def handle_attribution_on_login(sender, request, user, **kwargs):
     tracker = request.attribution.tracker
 
     if current_identity.linked_user == user:
+        request.attribution.refresh_identity()
+        logger.debug(f"Refreshed attribution cookie for user {user.id}")
         return
 
     existing_user_identity = _find_existing_user_identity(user)
@@ -29,8 +31,16 @@ def handle_attribution_on_login(sender, request, user, **kwargs):
         )
         tracker.update_identity_reference(request, existing_user_identity)
         request.attribution.identity = existing_user_identity
+        logger.info(
+            "Merged anonymous identity"
+            "{current_identity.uuid} into user"
+            "identity {existing_user_identity.uuid}"
+        )
+
     else:
         _link_identity_to_user(current_identity, user)
+        request.attribution.refresh_identity()
+        logger.info(f"Linked identity {current_identity.uuid} to user {user.id}")
 
 
 def _find_existing_user_identity(user) -> Optional[Identity]:

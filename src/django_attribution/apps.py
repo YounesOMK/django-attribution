@@ -1,0 +1,9 @@
+from django.apps import AppConfig
+
+
+class DjangoAttributionConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "django_attribution"
+
+    def ready(self):
+        pass

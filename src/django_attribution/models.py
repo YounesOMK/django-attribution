@@ -17,7 +17,6 @@ class Identity(models.Model):
         COOKIE = "cookie", "Cookie Based"
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    identity_value = models.CharField(max_length=255, db_index=True)
     tracking_method = models.CharField(
         max_length=20,
         choices=TrackingMethod.choices,
@@ -50,13 +49,12 @@ class Identity(models.Model):
     class Meta:
         verbose_name_plural = "Identities"
         indexes = [
-            models.Index(fields=["tracking_method", "identity_value"]),
+            models.Index(fields=["tracking_method"]),
             models.Index(fields=["created_at", "tracking_method"]),
         ]
-        unique_together = ["tracking_method", "identity_value"]
 
     def __str__(self):
-        return f"{self.tracking_method}:{self.identity_value[:20]}"
+        return f"{self.tracking_method}:{self.uuid}"
 
     def get_canonical_identity(self):
         if self.merged_into:

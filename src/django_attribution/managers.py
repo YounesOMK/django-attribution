@@ -3,12 +3,19 @@ from typing import TYPE_CHECKING
 from .models import Identity
 
 if TYPE_CHECKING:
+    from .trackers import CookieIdentityTracker
     from .types import AttributionHttpRequest
 
 
 class AttributionManager:
-    def __init__(self, identity: Identity, request: "AttributionHttpRequest"):
+    def __init__(
+        self,
+        identity: Identity,
+        request: "AttributionHttpRequest",
+        tracker: "CookieIdentityTracker",
+    ):
         self.identity = identity
+        self.tracker = tracker
         self.request = request
 
     def track_conversion(self, event: str, **kwargs):
