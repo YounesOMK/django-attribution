@@ -70,8 +70,6 @@ class UTMParameterMiddleware(RequestExclusionMixin):
 
 
 class AttributionMiddleware(RequestExclusionMixin):
-    ATTRIBUTION_SESSION_KEY = "_attribution_uuid"
-
     def __init__(self, get_response):
         self.get_response = get_response
         self.tracker = CookieIdentityTracker()
@@ -125,14 +123,10 @@ class AttributionMiddleware(RequestExclusionMixin):
             except Identity.DoesNotExist:
                 logger.debug(f"Identity not found for UUID: {attribution_uuid}")
 
-        # Create new identity
         identity = Identity.objects.create(
             tracking_method=Identity.TrackingMethod.COOKIE,
-            first_ip_address=self._get_client_ip(request),
-            first_user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
 
-        # Store in session
         self.tracker.set_identity_reference(request, identity)
         logger.debug(f"Created new attribution identity: {identity.uuid}")
 

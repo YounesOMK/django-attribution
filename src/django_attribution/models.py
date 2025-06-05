@@ -35,9 +35,6 @@ class Identity(models.Model):
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
     last_visit_at = models.DateTimeField(default=timezone.now, db_index=True)
 
-    first_ip_address = models.GenericIPAddressField(null=True, blank=True)
-    first_user_agent = models.TextField(blank=True)
-
     linked_user = models.ForeignKey(
         "auth.User",
         on_delete=models.SET_NULL,

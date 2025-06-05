@@ -52,13 +52,11 @@ class CookieIdentityTracker(IdentityTracker):
             return None
 
     def set_identity_reference(self, request: HttpRequest, identity: Identity) -> None:
-        """Queue setting the attribution cookie"""
         self._pending_cookie_value = str(identity.uuid)
         self._should_set_cookie = True
         logger.debug(f"Queued setting attribution cookie to: {identity.uuid}")
 
     def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
-        """Apply pending cookie operations to the response"""
         if self._should_set_cookie and self._pending_cookie_value:
             self._set_attribution_cookie(request, response, self._pending_cookie_value)
 
@@ -69,7 +67,6 @@ class CookieIdentityTracker(IdentityTracker):
     def _set_attribution_cookie(
         self, request: HttpRequest, response: HttpResponse, value: str
     ) -> None:
-        """Set the attribution cookie with proper security configuration"""
         cookie_kwargs = {
             "value": value,
             "max_age": django_attribution_settings.COOKIE_MAX_AGE,
@@ -78,13 +75,11 @@ class CookieIdentityTracker(IdentityTracker):
             "samesite": django_attribution_settings.COOKIE_SAMESITE,
         }
 
-        # Auto-detect secure setting based on request if not explicitly configured
         secure = django_attribution_settings.COOKIE_SECURE
         if secure is None:
             secure = request.is_secure()
         cookie_kwargs["secure"] = secure
 
-        # Set domain if configured
         domain = django_attribution_settings.COOKIE_DOMAIN
         if domain:
             cookie_kwargs["domain"] = domain
@@ -101,6 +96,5 @@ class CookieIdentityTracker(IdentityTracker):
         )
         logger.debug(f"Deleted attribution cookie: {self.cookie_name}")
 
-    def refresh_cookie(self, request: HttpRequest, identity: Identity) -> None:
-        """Refresh cookie to extend its expiry (useful on login, etc.)"""
+    def refresh_identity(self, request: HttpRequest, identity: Identity) -> None:
         self.set_identity_reference(request, identity)
