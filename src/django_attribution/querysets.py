@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.db import models
+from django.utils import timezone
 
 
 class BaseQuerySet(models.QuerySet):
@@ -13,6 +16,10 @@ class BaseQuerySet(models.QuerySet):
 
     def oldest_first(self):
         return self.order_by("created_at")
+
+    def created_since(self, days_ago: int):
+        cutoff = timezone.now() - timedelta(days=days_ago)
+        return self.filter(created_at__gte=cutoff)
 
 
 class IdentityQuerySet(BaseQuerySet):
