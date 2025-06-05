@@ -41,7 +41,6 @@ class IdentityAdmin(admin.ModelAdmin):
         "tracking_method",
         "linked_user",
         "created_at",
-        "last_visit_at",
     )
     list_filter = (
         "tracking_method",
@@ -62,7 +61,7 @@ class IdentityAdmin(admin.ModelAdmin):
             "Tracking",
             {"fields": ("merged_into",)},
         ),
-        ("Timestamps", {"fields": ("created_at", "last_visit_at")}),
+        ("Timestamps", {"fields": ("created_at",)}),
     )
 
     inlines = [TouchpointInline, ConversionInline]

@@ -46,8 +46,6 @@ class Identity(BaseModel):
         related_name="merged_identities",
     )
 
-    last_visit_at = models.DateTimeField(default=timezone.now, db_index=True)
-
     linked_user = models.ForeignKey(
         "auth.User",
         on_delete=models.SET_NULL,
