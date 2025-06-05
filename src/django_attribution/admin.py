@@ -60,7 +60,7 @@ class IdentityAdmin(admin.ModelAdmin):
         ),
         (
             "Tracking",
-            {"fields": ("first_ip_address", "first_user_agent", "merged_into")},
+            {"fields": ("merged_into",)},
         ),
         ("Timestamps", {"fields": ("created_at", "last_visit_at")}),
     )
