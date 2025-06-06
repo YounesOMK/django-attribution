@@ -10,12 +10,13 @@ from .settings import (
     DEFAULT_ATTRIBUTION_COOKIE_SECURE,
     DEFAULT_BOT_PATTERNS,
     DEFAULT_DJANGO_ATTRIBUTION_CURRENCY,
-    DEFAULT_EXCLUDED_URLS,
     DEFAULT_FILTER_BOTS,
     DEFAULT_LOG_VALIDATION_ERRORS,
     DEFAULT_MAX_UTM_LENGTH,
     DEFAULT_UTM_PARAMETERS,
     DEFAULT_WINDOW_DAYS,
+    DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS,
+    DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS,
 )
 
 
@@ -69,11 +70,19 @@ class DjangoAttributionSettings:
         )
 
     @property
-    def EXCLUDED_URLS(self):
+    def UTM_EXCLUDED_URLS(self):
         return getattr(
             settings,
-            "DJANGO_ATTRIBUTION_EXCLUDED_URLS",
-            DEFAULT_EXCLUDED_URLS,
+            "DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS",
+            DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS,
+        )
+
+    @property
+    def ATTRIBUTION_EXCLUDED_URLS(self):
+        return getattr(
+            settings,
+            "DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS",
+            DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS,
         )
 
     @property

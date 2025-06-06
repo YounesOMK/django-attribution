@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .models import Identity
 
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class AttributionManager:
     def __init__(
         self,
-        identity: Identity,
+        identity: Optional[Identity],
         request: "AttributionHttpRequest",
         tracker: "CookieIdentityTracker",
     ):

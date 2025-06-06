@@ -10,8 +10,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(user_logged_in)
 def handle_attribution_on_login(sender, request, user, **kwargs):
+    logger.info(f"Handling attribution on login for user {user.id}")
+
     if not hasattr(request, "attribution"):
-        logger.warning("Attribution middleware not found during login - skipping merge")
+        logger.warning(
+            "Attribution middleware not available during login. "
+            "Check MIDDLEWARE ordering or if AttributionMiddleware is installed."
+        )
         return
 
     current_identity = request.attribution.identity

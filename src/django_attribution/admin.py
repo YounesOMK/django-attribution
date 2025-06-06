@@ -69,6 +69,11 @@ class IdentityAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
 
+    def is_canonical(self, obj: Identity) -> bool:
+        return obj.get_canonical_identity() == obj
+
+    is_canonical.boolean = True  # type: ignore
+
 
 @admin.register(Touchpoint)
 class TouchpointAdmin(admin.ModelAdmin):

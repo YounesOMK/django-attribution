@@ -29,21 +29,17 @@ class IdentityTracker(ABC):
 
 
 class CookieIdentityTracker(IdentityTracker):
-    """Cookie-based attribution identity tracker"""
-
     def __init__(self):
         self.cookie_name = django_attribution_settings.COOKIE_NAME
         self._pending_cookie_value = None
         self._should_set_cookie = False
 
     def get_identity_reference(self, request: HttpRequest) -> Optional[str]:
-        """Get attribution identity UUID from cookie"""
         cookie_value = request.COOKIES.get(self.cookie_name)
 
         if not cookie_value:
             return None
 
-        # Validate UUID format
         try:
             uuid.UUID(cookie_value)
             return cookie_value
@@ -88,7 +84,6 @@ class CookieIdentityTracker(IdentityTracker):
         logger.debug(f"Set attribution cookie: {self.cookie_name}={value[:8]}...")
 
     def delete_cookie(self, response: HttpResponse) -> None:
-        """Delete the attribution cookie (for GDPR compliance, etc.)"""
         response.delete_cookie(
             self.cookie_name,
             path=django_attribution_settings.COOKIE_PATH,
