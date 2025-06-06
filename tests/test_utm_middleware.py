@@ -5,7 +5,9 @@ from django.http import HttpResponse
 from django_attribution.conf import django_attribution_settings
 
 
-def test_should_extract_all_standard_utm_parameters(middleware, make_request):
+def test_should_extract_all_standard_utm_parameters(
+    utm_parameter_middleware, make_request
+):
     utm_params = {
         "utm_source": "google",
         "utm_medium": "cpc",
@@ -15,32 +17,36 @@ def test_should_extract_all_standard_utm_parameters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
 
-def test_should_handle_missing_utm_parameters_gracefully(middleware, make_request):
+def test_should_handle_missing_utm_parameters_gracefully(
+    utm_parameter_middleware, make_request
+):
     request = make_request(other_params={"other_param": "value"})
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     assert request.META["utm_params"] == {}
 
 
-def test_should_extract_partial_utm_parameters(middleware, make_request):
+def test_should_extract_partial_utm_parameters(utm_parameter_middleware, make_request):
     """Should extract only the UTM parameters that are present"""
     utm_params = {"utm_source": "facebook", "utm_campaign": "brand_awareness"}
     request = make_request(
         utm_params=utm_params, other_params={"other_param": "ignored"}
     )
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
 
-def test_should_ignore_empty_and_whitespace_only_parameters(middleware, make_request):
+def test_should_ignore_empty_and_whitespace_only_parameters(
+    utm_parameter_middleware, make_request
+):
     """Should not include UTM parameters that are empty or contain only whitespace"""
     utm_params = {
         "utm_source": "google",
@@ -51,13 +57,13 @@ def test_should_ignore_empty_and_whitespace_only_parameters(middleware, make_req
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {"utm_source": "google", "utm_content": "valid_content"}
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_url_decode_utm_parameters(middleware, make_request):
+def test_should_url_decode_utm_parameters(utm_parameter_middleware, make_request):
     """Should properly decode URL-encoded UTM parameter values"""
     utm_params = {
         "utm_source": "google%20ads",
@@ -66,7 +72,7 @@ def test_should_url_decode_utm_parameters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {
         "utm_source": "google ads",
@@ -76,7 +82,7 @@ def test_should_url_decode_utm_parameters(middleware, make_request):
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_enforce_maximum_length_limit(middleware, make_request):
+def test_should_enforce_maximum_length_limit(utm_parameter_middleware, make_request):
     """Should reject UTM parameters that exceed the maximum allowed length"""
     utm_params = {
         "utm_source": "a" * 201,  # Exceeds MAX_UTM_LENGTH of 200
@@ -85,7 +91,7 @@ def test_should_enforce_maximum_length_limit(middleware, make_request):
     request = make_request(utm_params=utm_params)
 
     with patch("django_attribution.middlewares.logger") as mock_logger:
-        middleware(request)
+        utm_parameter_middleware(request)
 
         mock_logger.warning.assert_called_with(
             "UTM parameter utm_source exceeds maximum length"
@@ -95,7 +101,9 @@ def test_should_enforce_maximum_length_limit(middleware, make_request):
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_sanitize_non_printable_characters(middleware, make_request):
+def test_should_sanitize_non_printable_characters(
+    utm_parameter_middleware, make_request
+):
     utm_params = {
         "utm_source": "google\x00\x01ads",
         "utm_campaign": "summer\x7f\x80sale",
@@ -103,7 +111,7 @@ def test_should_sanitize_non_printable_characters(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {
         "utm_source": "googleads",
@@ -113,7 +121,7 @@ def test_should_sanitize_non_printable_characters(middleware, make_request):
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_normalize_whitespace(middleware, make_request):
+def test_should_normalize_whitespace(utm_parameter_middleware, make_request):
     """Should normalize multiple whitespace characters to single spaces"""
     utm_params = {
         "utm_source": "  google   ads  ",
@@ -122,7 +130,7 @@ def test_should_normalize_whitespace(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {
         "utm_source": "google ads",
@@ -132,7 +140,9 @@ def test_should_normalize_whitespace(middleware, make_request):
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_handle_unicode_characters_properly(middleware, make_request):
+def test_should_handle_unicode_characters_properly(
+    utm_parameter_middleware, make_request
+):
     """Should properly handle international characters in UTM parameters"""
     utm_params = {
         "utm_source": "поисковик",  # Cyrillic
@@ -142,12 +152,14 @@ def test_should_handle_unicode_characters_properly(middleware, make_request):
     }
     request = make_request(utm_params=utm_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     assert request.META["utm_params"] == utm_params
 
 
-def test_should_process_case_sensitive_parameters(middleware, make_request):
+def test_should_process_case_sensitive_parameters(
+    utm_parameter_middleware, make_request
+):
     """Should only extract parameters with exact case-sensitive names"""
     all_params = {
         "UTM_SOURCE": "google",  # Wrong case
@@ -157,36 +169,42 @@ def test_should_process_case_sensitive_parameters(middleware, make_request):
     }
     request = make_request(other_params=all_params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {"utm_source": "facebook", "utm_campaign": "summer"}
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_not_interfere_with_other_request_processing(middleware, make_request):
+def test_should_not_interfere_with_other_request_processing(
+    utm_parameter_middleware, make_request
+):
     request = make_request(utm_params={"utm_source": "google"})
     original_get_params = dict(request.GET)
 
-    result = middleware(request)
+    result = utm_parameter_middleware(request)
 
     assert isinstance(result, HttpResponse)
     assert dict(request.GET) == original_get_params
     assert "utm_params" in request.META
 
 
-def test_should_handle_extremely_long_parameter_lists(middleware, request_factory):
+def test_should_handle_extremely_long_parameter_lists(
+    utm_parameter_middleware, request_factory
+):
     params = {f"param_{i}": f"value_{i}" for i in range(100)}
     params.update({"utm_source": "google", "utm_campaign": "test"})
 
     request = request_factory.get("/", params)
 
-    middleware(request)
+    utm_parameter_middleware(request)
 
     expected_params = {"utm_source": "google", "utm_campaign": "test"}
     assert request.META["utm_params"] == expected_params
 
 
-def test_should_log_validation_errors_appropriately(middleware, make_request):
+def test_should_log_validation_errors_appropriately(
+    utm_parameter_middleware, make_request
+):
     utm_params = {
         "utm_source": "a" * 201,  # Too long
         "utm_medium": "valid",
@@ -194,27 +212,31 @@ def test_should_log_validation_errors_appropriately(middleware, make_request):
     request = make_request(utm_params=utm_params)
 
     with patch("django_attribution.middlewares.logger") as mock_logger:
-        middleware(request)
+        utm_parameter_middleware(request)
 
         mock_logger.warning.assert_called_with(
             "UTM parameter utm_source exceeds maximum length"
         )
 
 
-def test_should_be_defensive_against_unexpected_exceptions(middleware, make_request):
+def test_should_be_defensive_against_unexpected_exceptions(
+    utm_parameter_middleware, make_request
+):
     request = make_request(utm_params={"utm_source": "test"})
 
-    with patch.object(middleware, "_validate_utm_value") as mock_validate:
+    with patch.object(utm_parameter_middleware, "_validate_utm_value") as mock_validate:
         mock_validate.side_effect = Exception("Unexpected error")
 
         with patch("django_attribution.middlewares.logger") as mock_logger:
-            middleware(request)
+            utm_parameter_middleware(request)
 
             mock_logger.warning.assert_called()
             assert request.META["utm_params"] == {}
 
 
-def test_utm_parameter_constants_should_include_all_standard_parameters(middleware):
+def test_utm_parameter_constants_should_include_all_standard_parameters(
+    utm_parameter_middleware,
+):
     """Should define all five standard UTM parameters"""
     expected_params = {
         "utm_source",
@@ -226,12 +248,14 @@ def test_utm_parameter_constants_should_include_all_standard_parameters(middlewa
     assert set(django_attribution_settings.UTM_PARAMETERS) == set(expected_params)
 
 
-def test_should_have_reasonable_maximum_length_limit(middleware):
+def test_should_have_reasonable_maximum_length_limit(utm_parameter_middleware):
     """Should define a reasonable maximum length for UTM parameters"""
     assert 50 <= django_attribution_settings.MAX_UTM_LENGTH <= 500
 
 
-def test_should_ignore_requests_from_robots_and_crawlers(middleware, make_request):
+def test_should_ignore_requests_from_robots_and_crawlers(
+    utm_parameter_middleware, make_request
+):
     utm_params = {
         "utm_source": "google",
         "utm_medium": "cpc",
@@ -261,7 +285,7 @@ def test_should_ignore_requests_from_robots_and_crawlers(middleware, make_reques
         request = make_request(utm_params=utm_params)
         request.META["HTTP_USER_AGENT"] = user_agent
 
-        middleware(request)
+        utm_parameter_middleware(request)
 
         assert (
             request.META.get("utm_params", {}) == {}

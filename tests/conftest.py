@@ -8,7 +8,7 @@ from django_attribution.middlewares import UTMParameterMiddleware
 
 
 @pytest.fixture
-def middleware():
+def utm_parameter_middleware():
     get_response = Mock(return_value=HttpResponse("OK"))
     return UTMParameterMiddleware(get_response)
 
