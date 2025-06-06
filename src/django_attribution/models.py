@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
-from django_attribution.querysets import (
+from .querysets import (
     ConversionQuerySet,
     IdentityQuerySet,
     TouchpointQuerySet,
@@ -54,7 +54,7 @@ class Identity(BaseModel):
         related_name="attribution_identities",
     )
 
-    objects = IdentityQuerySet.as_manager()
+    objects = models.Manager.from_queryset(IdentityQuerySet)()
 
     class Meta:
         verbose_name_plural = "Identities"
@@ -95,7 +95,7 @@ class Touchpoint(BaseModel):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
 
-    objects = TouchpointQuerySet.as_manager()
+    objects = models.Manager.from_queryset(TouchpointQuerySet)()
 
     class Meta:
         indexes = [
@@ -129,7 +129,7 @@ class Conversion(BaseModel):
     source_object_id = models.PositiveIntegerField()
     source_object = GenericForeignKey("source_content_type", "source_object_id")
 
-    objects = ConversionQuerySet.as_manager()
+    objects = models.Manager.from_queryset(ConversionQuerySet)()
 
     class Meta:
         indexes = [

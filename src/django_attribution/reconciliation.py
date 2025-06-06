@@ -29,7 +29,7 @@ def find_unmerged_user_identities(user: User) -> "IdentityQuerySet":
     return Identity.objects.filter(
         linked_user=user,
         merged_into__isnull=True,
-    ).oldest_first()  # type: ignore[attr-defined]
+    ).oldest_first()
 
 
 def merge_identities(
