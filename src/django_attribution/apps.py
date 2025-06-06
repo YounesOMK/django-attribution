@@ -10,4 +10,4 @@ class DjangoAttributionConfig(AppConfig):
     name = "django_attribution"
 
     def ready(self):
-        pass
+        from .signals import handle_attribution_on_login
