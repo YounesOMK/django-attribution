@@ -2,23 +2,22 @@ from datetime import timedelta
 
 from django.db import models
 from django.utils import timezone
-from typing_extensions import Self
 
 
 class BaseQuerySet(models.QuerySet):
-    def active(self) -> "Self":
+    def active(self):
         return self.filter(is_active=True)
 
-    def inactive(self) -> "Self":
+    def inactive(self):
         return self.filter(is_active=False)
 
-    def newest_first(self) -> "Self":
+    def newest_first(self):
         return self.order_by("-created_at")
 
-    def oldest_first(self) -> "Self":
+    def oldest_first(self):
         return self.order_by("created_at")
 
-    def created_since(self, days_ago: int) -> "Self":
+    def created_since(self, days_ago: int):
         cutoff = timezone.now() - timedelta(days=days_ago)
         return self.filter(created_at__gte=cutoff)
 
