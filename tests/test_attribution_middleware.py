@@ -29,9 +29,11 @@ def test_middleware_creates_identity_and_touchpoint_for_new_visitor_with_utm(
 
     assert Identity.objects.count() == 1
     identity = Identity.objects.first()
+    assert identity is not None
 
     assert Touchpoint.objects.count() == 1
     touchpoint = Touchpoint.objects.first()
+    assert touchpoint is not None
 
     assert touchpoint.identity == identity
     assert touchpoint.utm_source == "google"
@@ -92,6 +94,7 @@ def test_middleware_finds_existing_identity_for_returning_visitor(
     # Should create a new touchpoint for the existing identity
     assert Touchpoint.objects.count() == 1
     touchpoint = Touchpoint.objects.first()
+    assert touchpoint is not None
     assert touchpoint.identity == existing_identity
     assert touchpoint.utm_source == "facebook"
     assert touchpoint.utm_medium == "social"
@@ -127,7 +130,7 @@ def test_middleware_records_complete_touchpoint_data(
 
     assert Touchpoint.objects.count() == 1
     touchpoint = Touchpoint.objects.first()
-
+    assert touchpoint is not None
     assert touchpoint.utm_source == "google"
     assert touchpoint.utm_medium == "cpc"
     assert touchpoint.utm_campaign == "brand"
@@ -156,6 +159,7 @@ def test_middleware_extracts_ip_from_x_forwarded_for(
     attribution_middleware(request)
 
     touchpoint = Touchpoint.objects.first()
+    assert touchpoint is not None
     assert touchpoint.ip_address == "203.0.113.1"
 
 
@@ -219,6 +223,7 @@ def test_middleware_handles_nonexistent_identity_uuid(
     assert Touchpoint.objects.count() == 1
 
     new_identity = Identity.objects.first()
+    assert new_identity is not None
     assert str(new_identity.uuid) != fake_uuid
 
 
@@ -259,6 +264,7 @@ def test_middleware_preserves_utm_params_in_touchpoint(
     attribution_middleware(request)
 
     touchpoint = Touchpoint.objects.first()
+    assert touchpoint is not None
     assert touchpoint.utm_source == "google"
     assert touchpoint.utm_medium == ""
     assert touchpoint.utm_campaign == "test"
@@ -282,5 +288,6 @@ def test_middleware_handles_invalid_utm_params(
     assert Touchpoint.objects.count() == 1
 
     touchpoint = Touchpoint.objects.first()
+    assert touchpoint is not None
     assert touchpoint.utm_source == "valid"
     assert touchpoint.utm_medium == ""
