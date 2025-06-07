@@ -114,14 +114,15 @@ class AttributionMiddleware(RequestExclusionMixin):
     def _resolve_trackable_identity(
         self, request: "AttributionHttpRequest", utm_params: dict
     ) -> "Optional[Identity]":
-        if not self._should_track(request, utm_params):
+        if not self._should_track_identity(request, utm_params):
             return None
 
         identity = self._get_or_create_identity(request)
-        self._record_touchpoint(identity, request, utm_params)
+        if utm_params:
+            self._record_touchpoint(identity, request, utm_params)
         return identity
 
-    def _should_track(
+    def _should_track_identity(
         self, request: "AttributionHttpRequest", utm_params: dict
     ) -> bool:
         return bool(utm_params or self.tracker.get_identity_reference(request))

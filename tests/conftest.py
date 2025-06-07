@@ -1,16 +1,11 @@
 from unittest.mock import Mock
 
 import pytest
+from django.contrib.auth.models import AnonymousUser, User
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from django_attribution.middlewares import UTMParameterMiddleware
-
-
-@pytest.fixture
-def utm_parameter_middleware():
-    get_response = Mock(return_value=HttpResponse("OK"))
-    return UTMParameterMiddleware(get_response)
+from django_attribution.middlewares import AttributionMiddleware, UTMParameterMiddleware
 
 
 @pytest.fixture
@@ -29,3 +24,25 @@ def make_request(request_factory):
         return request_factory.get(path, params)
 
     return _make_request
+
+
+@pytest.fixture
+def utm_parameter_middleware():
+    get_response = Mock(return_value=HttpResponse("OK"))
+    return UTMParameterMiddleware(get_response)
+
+
+@pytest.fixture
+def attribution_middleware():
+    get_response = Mock(return_value=HttpResponse("OK"))
+    return AttributionMiddleware(get_response)
+
+
+@pytest.fixture
+def authenticated_user():
+    return User.objects.create_user(username="testuser", password="testpassword")
+
+
+@pytest.fixture
+def anonymous_user():
+    return AnonymousUser()
