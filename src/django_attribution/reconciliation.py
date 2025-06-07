@@ -64,11 +64,18 @@ def resolve_user_identity(
 
     if current_identity.linked_user and current_identity.linked_user != user:
         logger.warning(
-            f"Identity {current_identity.uuid}"
-            f"linked to different user {current_identity.linked_user.id},"
-            f"but request from user {user.id}"
+            f"Identity conflict on shared device"
+            f"creating fresh identity for user {user.id}"
         )
-        return current_identity
+
+        tracker.delete_cookie(request)
+        fresh_identity = Identity.objects.create(
+            tracking_method=Identity.TrackingMethod.COOKIE
+        )
+        link_identity_to_user(fresh_identity, user)
+        tracker.set_identity_reference(request, fresh_identity)
+
+        return fresh_identity
 
     unmerged_identities = find_unmerged_user_identities(user)
 
