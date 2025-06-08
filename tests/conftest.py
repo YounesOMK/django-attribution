@@ -6,6 +6,20 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from django_attribution.middlewares import AttributionMiddleware, UTMParameterMiddleware
+from django_attribution.models import Identity, Touchpoint
+
+
+@pytest.fixture(autouse=True)
+def clean_database(db):
+    # Clean up attribution-specific models
+    Touchpoint.objects.all().delete()
+    Identity.objects.all().delete()
+
+    yield  # Run the test
+
+    # Optional: cleanup after test as well
+    Touchpoint.objects.all().delete()
+    Identity.objects.all().delete()
 
 
 @pytest.fixture

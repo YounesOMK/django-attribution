@@ -70,9 +70,7 @@ def test_middleware_does_not_create_identity_and_touchpoint_for_new_visitor_with
 def test_middleware_finds_existing_identity_for_returning_visitor(
     make_request, attribution_middleware, utm_parameter_middleware, anonymous_user
 ):
-    existing_identity = Identity.objects.create(
-        tracking_method=Identity.TrackingMethod.COOKIE
-    )
+    existing_identity = Identity.objects.create()
 
     request = make_request(
         "/", utm_params={"utm_source": "facebook", "utm_medium": "social"}
@@ -231,9 +229,7 @@ def test_middleware_handles_nonexistent_identity_uuid(
 def test_middleware_tracks_existing_identity_without_utm_params(
     make_request, utm_parameter_middleware, attribution_middleware, anonymous_user
 ):
-    existing_identity = Identity.objects.create(
-        tracking_method=Identity.TrackingMethod.COOKIE
-    )
+    existing_identity = Identity.objects.create()
 
     request = make_request("/some-page/")  # No UTM params
     request.user = anonymous_user
