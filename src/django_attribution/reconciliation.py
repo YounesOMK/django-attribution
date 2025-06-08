@@ -113,9 +113,7 @@ def find_canonical_user_identity(user: User) -> Optional[Identity]:
 
 
 def create_fresh_identity_for_user(user: User, tracker, request) -> Identity:
-    fresh_identity = Identity.objects.create(
-        tracking_method=Identity.TrackingMethod.COOKIE
-    )
+    fresh_identity = Identity.objects.create()
     link_identity_to_user(fresh_identity, user)
     tracker.set_identity_reference(request, fresh_identity)
     logger.info(

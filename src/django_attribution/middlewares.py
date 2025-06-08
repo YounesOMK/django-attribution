@@ -70,8 +70,6 @@ class UTMParameterMiddleware(RequestExclusionMixin):
 
 
 class AttributionMiddleware(RequestExclusionMixin):
-    TRACKING_METHOD = Identity.TrackingMethod.COOKIE
-
     def __init__(self, get_response):
         self.get_response = get_response
         self.tracker = CookieIdentityTracker()
@@ -140,7 +138,6 @@ class AttributionMiddleware(RequestExclusionMixin):
         try:
             identity = Identity.objects.get(
                 uuid=identity_uuid,
-                tracking_method=self.TRACKING_METHOD,
             )
             return identity.get_canonical_identity()
         except Identity.DoesNotExist:
@@ -170,7 +167,7 @@ class AttributionMiddleware(RequestExclusionMixin):
         return canonical
 
     def _create_identity(self, request: "AttributionHttpRequest") -> Identity:
-        identity = Identity.objects.create(tracking_method=self.TRACKING_METHOD)
+        identity = Identity.objects.create()
         self.tracker.set_identity_reference(request, identity)
         logger.debug(f"Created new attribution identity: {identity.uuid}")
         return identity

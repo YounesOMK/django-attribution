@@ -39,14 +39,10 @@ class ConversionInline(admin.TabularInline):
 class IdentityAdmin(admin.ModelAdmin):
     list_display = (
         "linked_user",
-        "tracking_method",
         "created_at",
         "is_canonical",
     )
-    list_filter = (
-        "tracking_method",
-        "created_at",
-    )
+    list_filter = ("created_at",)
     search_fields = ("linked_user__username",)
     readonly_fields = (
         "uuid",
@@ -56,7 +52,7 @@ class IdentityAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("uuid", "tracking_method", "linked_user")},
+            {"fields": ("uuid", "linked_user")},
         ),
         (
             "Tracking",

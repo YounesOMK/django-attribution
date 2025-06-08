@@ -32,16 +32,6 @@ class BaseModel(models.Model):
 
 
 class Identity(BaseModel):
-    class TrackingMethod(models.TextChoices):
-        COOKIE = "cookie", "Cookie Based"
-
-    tracking_method = models.CharField(
-        max_length=20,
-        choices=TrackingMethod.choices,
-        default=TrackingMethod.COOKIE,
-        db_index=True,
-    )
-
     merged_into = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -63,12 +53,11 @@ class Identity(BaseModel):
     class Meta:
         verbose_name_plural = "Identities"
         indexes = [
-            models.Index(fields=["tracking_method"]),
-            models.Index(fields=["created_at", "tracking_method"]),
+            models.Index(fields=["created_at"]),
         ]
 
     def __str__(self):
-        return f"{self.tracking_method}:{self.uuid}"
+        return f"{self.uuid}"
 
     def get_canonical_identity(self):
         visited = set()

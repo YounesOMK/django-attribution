@@ -1,6 +1,5 @@
 import logging
 import uuid
-from abc import ABC, abstractmethod
 from typing import Optional
 
 from django.http import HttpRequest, HttpResponse
@@ -11,28 +10,11 @@ from .models import Identity
 logger = logging.getLogger(__name__)
 
 
-class IdentityTracker(ABC):
-    @abstractmethod
-    def get_identity_reference(self, request: HttpRequest) -> Optional[str]:
-        """Get identity reference from request"""
-        pass
-
-    @abstractmethod
-    def set_identity_reference(self, request: HttpRequest, identity: Identity) -> None:
-        """Queue setting identity reference for response"""
-        pass
-
-    @abstractmethod
-    def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
-        """Apply any pending operations to the response"""
-        pass
-
-
-class CookieIdentityTracker(IdentityTracker):
+class CookieIdentityTracker:
     def __init__(self):
+        self._should_set_cookie = False
         self.cookie_name = django_attribution_settings.COOKIE_NAME
         self._pending_cookie_value = None
-        self._should_set_cookie = False
         self.delete_cookie_queued = False
 
     def get_identity_reference(self, request: HttpRequest) -> Optional[str]:
