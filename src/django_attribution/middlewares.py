@@ -158,13 +158,15 @@ class AttributionMiddleware(RequestExclusionMixin):
     def _ensure_canonical_cookie(
         self, request: "AttributionHttpRequest", identity: Identity
     ) -> Identity:
-        canonical = identity.get_canonical_identity()
+        canonical_identity = identity.get_canonical_identity()
 
-        if canonical != identity:
-            self.tracker.set_identity_reference(request, canonical)
-            logger.debug(f"Updated cookie to canonical identity: {canonical.uuid}")
+        if canonical_identity != identity:
+            self.tracker.set_identity_reference(request, canonical_identity)
+            logger.debug(
+                f"Updated cookie to canonical" f" identity: {canonical_identity.uuid}"
+            )
 
-        return canonical
+        return canonical_identity
 
     def _create_identity(self, request: "AttributionHttpRequest") -> Identity:
         identity = Identity.objects.create()
@@ -189,7 +191,6 @@ class AttributionMiddleware(RequestExclusionMixin):
         )
 
     def _extract_client_ip(self, request: "AttributionHttpRequest") -> "Optional[str]":
-        """Extract client IP address from request headers"""
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
             return x_forwarded_for.split(",")[0].strip()
