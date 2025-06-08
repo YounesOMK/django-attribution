@@ -36,9 +36,11 @@ def test_attribution_identity_resolution_and_user_linking_flow(
     assert Touchpoint.objects.count() == 1
 
     identity1 = Identity.objects.first()
+    assert identity1 is not None
     assert identity1.linked_user is None  # Not linked to user yet
 
     touchpoint1 = Touchpoint.objects.first()
+    assert touchpoint1 is not None
     assert touchpoint1.identity == identity1
     assert touchpoint1.utm_source == "google"
     assert touchpoint1.utm_campaign == "summer_sale"
@@ -154,6 +156,7 @@ def test_attribution_identity_resolution_and_user_linking_flow(
     assert Touchpoint.objects.count() == 3  # No new touchpoint (no UTM)
 
     final_identity = Identity.objects.first()
+    assert final_identity is not None
     assert final_identity.linked_user == user
     assert final_identity.touchpoints.count() == 3
 
