@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pytest
 from django.contrib.auth.models import User
 
@@ -48,9 +50,9 @@ def test_circular_merge_chain_detection_prevents_infinite_recursion():
     assert identity_b.merged_into == identity_c
     assert identity_c.merged_into == identity_a
 
-    canonical_a = identity_a.get_canonical_identity()
-    canonical_b = identity_b.get_canonical_identity()
-    canonical_c = identity_c.get_canonical_identity()
+    canonical_a: Optional[Identity] = identity_a.get_canonical_identity()
+    canonical_b: Optional[Identity] = identity_b.get_canonical_identity()
+    canonical_c: Optional[Identity] = identity_c.get_canonical_identity()
 
     assert canonical_a == canonical_b == canonical_c
 
@@ -74,7 +76,7 @@ def test_circular_merge_chain_detection_prevents_infinite_recursion():
     assert canonical_a.is_canonical() is True
 
     canonical_chain_length = 0
-    current = canonical_a
+    current: Optional[Identity] = canonical_a
     visited = set()
 
     while current and current.id not in visited and canonical_chain_length < 10:
