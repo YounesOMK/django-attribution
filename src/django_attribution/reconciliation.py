@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from django.contrib.auth.models import User
 
@@ -64,18 +65,24 @@ def resolve_user_identity(
 
     if current_identity.linked_user and current_identity.linked_user != user:
         logger.warning(
-            f"Identity conflict on shared device"
-            f"creating fresh identity for user {user.id}"
+            f"Identity {current_identity.uuid} linked"
+            f" to user {current_identity.linked_user.id},"
+            f" but request from user {user.id} - resolving conflict"
         )
 
-        tracker.delete_cookie(request)
-        fresh_identity = Identity.objects.create(
-            tracking_method=Identity.TrackingMethod.COOKIE
-        )
-        link_identity_to_user(fresh_identity, user)
-        tracker.set_identity_reference(request, fresh_identity)
+        existing_identity = find_canonical_user_identity(user)
 
-        return fresh_identity
+        tracker.delete_cookie_queued = True
+
+        if existing_identity:
+            tracker.set_identity_reference(request, existing_identity)
+            logger.info(
+                f"Restored original identity {existing_identity.uuid}"
+                f" for returning user {user.id}"
+            )
+            return existing_identity
+        else:
+            return create_fresh_identity_for_user(user, tracker, request)
 
     unmerged_identities = find_unmerged_user_identities(user)
 
@@ -96,3 +103,23 @@ def resolve_user_identity(
             f"to already-logged-in user {user.id}"
         )
         return current_identity
+
+
+def find_canonical_user_identity(user: User) -> Optional[Identity]:
+    unmerged_identities = find_unmerged_user_identities(user)
+    if unmerged_identities.exists():
+        return unmerged_identities.first()
+    return None
+
+
+def create_fresh_identity_for_user(user: User, tracker, request) -> Identity:
+    fresh_identity = Identity.objects.create(
+        tracking_method=Identity.TrackingMethod.COOKIE
+    )
+    link_identity_to_user(fresh_identity, user)
+    tracker.set_identity_reference(request, fresh_identity)
+    logger.info(
+        f"Created fresh identity {fresh_identity.uuid}"
+        f" for user {user.id} due to shared device conflict"
+    )
+    return fresh_identity

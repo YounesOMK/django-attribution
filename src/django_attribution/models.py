@@ -1,4 +1,6 @@
+import logging
 import uuid
+from typing import List
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +12,8 @@ from .querysets import (
     IdentityQuerySet,
     TouchpointQuerySet,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_default_currency():
@@ -67,9 +71,74 @@ class Identity(BaseModel):
         return f"{self.tracking_method}:{self.uuid}"
 
     def get_canonical_identity(self):
-        if self.merged_into:
-            return self.merged_into.get_canonical_identity()
+        visited = set()
+        current = self
+        path: List["Identity"] = []
+        max_depth = 100
+
+        while current and current.id not in visited and len(path) < max_depth:
+            visited.add(current.id)
+            path.append(current)
+
+            if not current.merged_into:
+                return current
+
+            current = current.merged_into
+
+        if len(path) >= max_depth:
+            logger.error(
+                f"Identity chain too deep (>{max_depth}) starting from {self.uuid}"
+            )
+            return self
+
+        if current and current.id in visited:
+            logger.warning(
+                f"Circular merge detected"
+                f" in identity chain starting from {self.uuid}"
+            )
+
+            cycle_start_index = next(
+                i for i, identity in enumerate(path) if identity.id == current.id
+            )
+            cycle_identities = path[cycle_start_index:]
+
+            canonical = self._heal_circular_merge(cycle_identities)
+            return canonical
+
+        logger.error(f"Unexpected state in get_canonical_identity for {self.uuid}")
         return self
+
+    def _heal_circular_merge(self, cycle_identities: List["Identity"]) -> "Identity":
+        if not cycle_identities:
+            return self
+
+        canonical = min(cycle_identities, key=lambda x: x.created_at)
+
+        logger.info(
+            f"Healing circular merge:"
+            f" chose {canonical.uuid} as canonical"
+            f" from {len(cycle_identities)} identities"
+        )
+
+        for identity in cycle_identities:
+            if identity != canonical:
+                identity.touchpoints.update(identity=canonical)
+                identity.conversions.update(identity=canonical)
+
+                identity.merged_into = canonical
+                identity.save(update_fields=["merged_into"])
+
+                logger.info(
+                    f"Merged identity {identity.uuid}"
+                    f" into canonical {canonical.uuid}"
+                )
+
+        if canonical.merged_into:
+            canonical.merged_into = None
+            canonical.save(update_fields=["merged_into"])
+
+        logger.info(f"Circular merge healed: {canonical.uuid} is now canonical")
+        return canonical
 
     def is_merged(self) -> bool:
         return self.merged_into is not None

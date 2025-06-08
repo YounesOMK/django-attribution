@@ -33,6 +33,7 @@ class CookieIdentityTracker(IdentityTracker):
         self.cookie_name = django_attribution_settings.COOKIE_NAME
         self._pending_cookie_value = None
         self._should_set_cookie = False
+        self.delete_cookie_queued = False
 
     def get_identity_reference(self, request: HttpRequest) -> Optional[str]:
         cookie_value = request.COOKIES.get(self.cookie_name)
@@ -53,6 +54,10 @@ class CookieIdentityTracker(IdentityTracker):
         logger.debug(f"Queued setting attribution cookie to: {identity.uuid}")
 
     def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
+        if self.delete_cookie_queued:
+            self.delete_cookie(response)
+            self.delete_cookie_queued = False
+
         if self._should_set_cookie and self._pending_cookie_value:
             self._set_attribution_cookie(request, response, self._pending_cookie_value)
 
