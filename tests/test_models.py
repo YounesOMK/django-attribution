@@ -37,7 +37,6 @@ def test_circular_merge_chain_detection_prevents_infinite_recursion():
         utm_campaign="campaign_c",
     )
 
-    # Simulate corruption/race condition that creates circular merge chain
     identity_a.merged_into = identity_b  # A → B
     identity_b.merged_into = identity_c  # B → C
     identity_c.merged_into = identity_a  # C → A (creates cycle: A→B→C→A)
