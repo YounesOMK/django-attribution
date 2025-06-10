@@ -3,30 +3,34 @@ import logging
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
 
-from .reconciliation import resolve_user_identity
+from .reconciliation import reconcile_user_identity
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(user_logged_in)
 def handle_attribution_on_login(sender, request, user, **kwargs):
-    logger.info(f"Handling attribution on login for user {user.id}")
-
-    if not hasattr(request, "attribution"):
-        logger.warning(
-            "Attribution middleware not available during login. "
-            "Check MIDDLEWARE ordering or if AttributionMiddleware is installed."
-        )
+    utm_params = request.META.get("utm_params", {})
+    if not utm_params:
         return
 
-    current_identity = request.attribution.identity
-    tracker = request.attribution.tracker
+    try:
+        logger.info(f"Handling attribution reconciliation for user {user.id} login")
 
-    resolved_identity = resolve_user_identity(request, current_identity, tracker)
+        canonical_identity = reconcile_user_identity(request)
+        if canonical_identity:
+            logger.info(
+                f"Successfully reconciled identity for user {user.id} "
+                f"to canonical identity {canonical_identity.uuid}"
+            )
+        else:
+            logger.info(
+                f"No canonical identity found"
+                f" for user {user.id}, skipping reconciliation"
+            )
 
-    if resolved_identity != current_identity:
-        request.attribution.identity = resolved_identity
-        logger.info(f"Updated attribution identity during login for user {user.id}")
-    else:
-        tracker.refresh_identity(request, current_identity)
-        logger.debug(f"Refreshed attribution cookie for user {user.id}")
+    except Exception as e:
+        logger.error(
+            f"Error during attribution reconciliation for user {user.id}: {e}",
+            exc_info=True,
+        )
