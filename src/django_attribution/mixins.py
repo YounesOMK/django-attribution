@@ -14,20 +14,9 @@ class RequestExclusionMixin:
             for bot_pattern in django_attribution_settings.BOT_PATTERNS
         )
 
-    def _is_excluded_for_utm(self, request: HttpRequest) -> bool:
+    def _should_skip_utm_params_recording(self, request: HttpRequest) -> bool:
         if self._matches_url_patterns(
             request, django_attribution_settings.UTM_EXCLUDED_URLS
-        ):
-            return True
-
-        if django_attribution_settings.FILTER_BOTS and self._is_bot_request(request):
-            return True
-
-        return False
-
-    def _is_excluded_for_attribution(self, request: HttpRequest) -> bool:
-        if self._matches_url_patterns(
-            request, django_attribution_settings.ATTRIBUTION_EXCLUDED_URLS
         ):
             return True
 

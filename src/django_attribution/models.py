@@ -138,7 +138,11 @@ class Identity(BaseModel):
 
 class Touchpoint(BaseModel):
     identity = models.ForeignKey(
-        Identity, on_delete=models.CASCADE, related_name="touchpoints"
+        Identity,
+        on_delete=models.SET_NULL,
+        related_name="touchpoints",
+        null=True,
+        blank=True,
     )
 
     url = models.URLField(max_length=2048)
@@ -168,7 +172,11 @@ class Touchpoint(BaseModel):
 
 class Conversion(BaseModel):
     identity = models.ForeignKey(
-        Identity, on_delete=models.CASCADE, related_name="conversions"
+        Identity,
+        on_delete=models.SET_NULL,
+        related_name="conversions",
+        null=True,
+        blank=True,
     )
 
     conversion_type = models.CharField(max_length=255, db_index=True)
@@ -181,10 +189,12 @@ class Conversion(BaseModel):
 
     source_content_type = models.ForeignKey(
         ContentType,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="conversions_as_source_object",
+        null=True,
+        blank=True,
     )
-    source_object_id = models.PositiveIntegerField()
+    source_object_id = models.PositiveIntegerField(null=True, blank=True)
     source_object = GenericForeignKey("source_content_type", "source_object_id")
 
     objects = models.Manager.from_queryset(ConversionQuerySet)()

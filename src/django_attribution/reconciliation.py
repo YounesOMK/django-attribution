@@ -4,120 +4,101 @@ from typing import Optional
 from django.contrib.auth.models import User
 
 from django_attribution.models import Identity
-from django_attribution.querysets import IdentityQuerySet
+from django_attribution.trackers import CookieIdentityTracker
 
 logger = logging.getLogger(__name__)
 
 
-def establish_canonical(
-    unmerged_identities: "IdentityQuerySet",
-    current_identity: Identity,
-) -> Identity:
-    canonical = unmerged_identities[0]
-
-    merge_identities(current_identity, canonical)
-
-    for duplicate in unmerged_identities[1:]:
-        merge_identities(duplicate, canonical)
-        logger.warning(
-            f"Found duplicate user identity {duplicate.uuid} - merged into canonical"
-        )
-
-    return canonical
+def reconcile_user_identity(request) -> Optional[Identity]:
+    canonical_identity = _resolve_user_identity(request)
+    if canonical_identity:
+        request.attribution.tracker.set_identity(canonical_identity)
+    return canonical_identity
 
 
-def find_unmerged_user_identities(user: User) -> "IdentityQuerySet":
-    return Identity.objects.filter(
+def _resolve_user_identity(request) -> Optional[Identity]:
+    user = request.user
+    tracker = request.attribution.tracker
+
+    current_identity = _get_current_identity_from_request(request, tracker)
+    user_canonical_identity = _find_user_canonical_identity(user)
+    utm_params = request.META.get("utm_params", {})
+
+    # No current identity - skip to fallback logic
+    if not current_identity:
+        if user_canonical_identity:
+            return user_canonical_identity
+        if utm_params:
+            return _create_canonical_identity_for_user(user)
+        return None
+
+    # Current identity belongs to this user
+    if current_identity.linked_user == user:
+        canonical = current_identity.get_canonical_identity()
+        logger.info(f"Using user's canonical identity {canonical.uuid}")
+        return canonical
+
+    # Current identity is unlinked - we can claim it
+    if not current_identity.linked_user:
+        if user_canonical_identity:
+            _merge_identity_to_canonical(current_identity, user_canonical_identity)
+            return user_canonical_identity
+        current_identity.linked_user = user
+        current_identity.save(update_fields=["linked_user"])
+        return current_identity
+
+    # Current identity belongs to different user - use fallback logic
+    if user_canonical_identity:
+        return user_canonical_identity
+    if utm_params:
+        return _create_canonical_identity_for_user(user)
+    return None
+
+
+def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
+    if source == canonical:
+        return
+
+    if source.is_merged():
+        logger.warning(f"Source identity {source.uuid} is already merged")
+        return
+
+    source.touchpoints.update(identity=canonical)
+    source.conversions.update(identity=canonical)
+
+    source.merged_into = canonical
+    source.linked_user = canonical.linked_user
+    source.save(update_fields=["merged_into", "linked_user"])
+
+    logger.info(f"Merged identity {source.uuid} into {canonical.uuid}")
+
+
+def _find_user_canonical_identity(user: User) -> Optional[Identity]:
+    user_identities = Identity.objects.filter(
         linked_user=user,
         merged_into__isnull=True,
     ).oldest_first()
 
-
-def merge_identities(
-    from_identity: Identity,
-    to_identity: Identity,
-):
-    from_identity.touchpoints.update(identity=to_identity)
-    from_identity.conversions.update(identity=to_identity)
-
-    from_identity.merged_into = to_identity
-    from_identity.linked_user = to_identity.linked_user
-    from_identity.save(update_fields=["merged_into", "linked_user"])
-
-    logger.info(f"Merged identity {from_identity.uuid} into {to_identity.uuid}")
-
-
-def link_identity_to_user(identity: Identity, user: User):
-    identity.linked_user = user
-    identity.save(update_fields=["linked_user"])
-    logger.info(f"Linked identity {identity.uuid} to user {user.id}")
-
-
-def resolve_user_identity(
-    request,
-    current_identity: Identity,
-    tracker,
-) -> Identity:
-    user = request.user
-
-    if current_identity.linked_user == user:
-        return current_identity
-
-    if current_identity.linked_user and current_identity.linked_user != user:
-        logger.warning(
-            f"Identity {current_identity.uuid} linked"
-            f" to user {current_identity.linked_user.id},"
-            f" but request from user {user.id} - resolving conflict"
-        )
-
-        existing_identity = find_canonical_user_identity(user)
-
-        tracker.delete_cookie_queued = True
-
-        if existing_identity:
-            tracker.set_identity_reference(request, existing_identity)
-            logger.info(
-                f"Restored original identity {existing_identity.uuid}"
-                f" for returning user {user.id}"
-            )
-            return existing_identity
-        else:
-            return create_fresh_identity_for_user(user, tracker, request)
-
-    unmerged_identities = find_unmerged_user_identities(user)
-
-    if unmerged_identities:
-        canonical_identity = establish_canonical(unmerged_identities, current_identity)
-        tracker.set_identity_reference(request, canonical_identity)
-        logger.info(
-            f"Merged {len(unmerged_identities)}"
-            f"user identities into canonical "
-            f"{canonical_identity.uuid}"
-        )
-        return canonical_identity
-    else:
-        link_identity_to_user(current_identity, user)
-        tracker.refresh_identity(request, current_identity)
-        logger.info(
-            f"Linked identity {current_identity.uuid}"
-            f"to already-logged-in user {user.id}"
-        )
-        return current_identity
-
-
-def find_canonical_user_identity(user: User) -> Optional[Identity]:
-    unmerged_identities = find_unmerged_user_identities(user)
-    if unmerged_identities.exists():
-        return unmerged_identities.first()
+    if user_identities.exists():
+        return user_identities.first()
     return None
 
 
-def create_fresh_identity_for_user(user: User, tracker, request) -> Identity:
-    fresh_identity = Identity.objects.create()
-    link_identity_to_user(fresh_identity, user)
-    tracker.set_identity_reference(request, fresh_identity)
-    logger.info(
-        f"Created fresh identity {fresh_identity.uuid}"
-        f" for user {user.id} due to shared device conflict"
-    )
-    return fresh_identity
+def _get_current_identity_from_request(
+    request, tracker: CookieIdentityTracker
+) -> Optional[Identity]:
+    identity_ref = tracker.get_identity_reference(request)
+
+    if not identity_ref:
+        return None
+
+    try:
+        return Identity.objects.get(uuid=identity_ref)
+    except Identity.DoesNotExist:
+        return None
+
+
+def _create_canonical_identity_for_user(user: User) -> Identity:
+    identity = Identity.objects.create(linked_user=user)
+    logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
+    return identity
