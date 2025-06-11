@@ -5,7 +5,6 @@ from urllib.parse import unquote_plus
 from django.http import HttpResponse
 
 from .conf import django_attribution_settings
-from .managers import AttributionManager
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
 from .trackers import CookieIdentityTracker
@@ -75,21 +74,14 @@ class AttributionMiddleware:
         self.tracker = CookieIdentityTracker()
 
     def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
-        identity = None
-        utm_params = request.META.get("utm_params", {})
-
-        request.attribution = AttributionManager(
-            identity=identity,
-            tracker=self.tracker,
-        )
-
+        request.identity_tracker = self.tracker
         identity = self._resolve_identity(request)
-
-        if utm_params:
-            self._record_touchpoint(identity, request)
 
         if not identity:
             return self.get_response(request)
+
+        if self._has_utm_params(request):
+            self._record_touchpoint(identity, request)
 
         response = self.get_response(request)
 
@@ -103,52 +95,42 @@ class AttributionMiddleware:
         if request.user.is_authenticated:
             return self._resolve_authenticated_user_identity(request)
 
+        if not self._has_utm_params(request):
+            return None
+
         return self._resolve_anonymous_identity(request)
 
     def _resolve_anonymous_identity(
         self, request: "AttributionHttpRequest"
-    ) -> Optional[Identity]:
-        utm_params = request.META.get("utm_params", {})
-
-        if not utm_params:
-            return None
-
+    ) -> Identity:
         current_identity = self._get_current_identity_from_cookie(request)
 
-        if not current_identity:
-            current_identity = Identity.objects.create()
-            assert current_identity is not None
-            self.tracker.set_identity(current_identity)
-            logger.debug(
-                f"Created new identity {current_identity.uuid} for anonymous user"
-            )
+        if not current_identity or current_identity.linked_user:
+            new_identity = Identity.objects.create()
+            self.tracker.set_identity(new_identity)
+            logger.info(f"Created new anonymous identity {new_identity.uuid}")
+            return new_identity
 
-        if current_identity.linked_user:
-            return None
         canonical_identity = current_identity.get_canonical_identity()
         if canonical_identity != current_identity:
             self.tracker.set_identity(canonical_identity)
-            current_identity = canonical_identity
 
-        return current_identity
+        return canonical_identity
 
     def _resolve_authenticated_user_identity(
         self, request: "AttributionHttpRequest"
     ) -> Optional[Identity]:
         current_identity = self._get_current_identity_from_cookie(request)
 
-        if not current_identity:
-            logger.debug(
-                f"No current identity for"
-                f" authenticated user {request.user.id}, resolving"
+        if not (current_identity or self._has_utm_params(request)):
+            logger.info(
+                "No UTM parameters and no current identity"
+                "for user {request.user.id}, skipping identity creation"
             )
-            return self._reconcile_user_identity(request)
+            return None
 
-        if current_identity.linked_user != request.user:
-            logger.debug(
-                f"Current identity {current_identity.uuid} doesn't match "
-                f"authenticated user {request.user.id}, resolving"
-            )
+        if not current_identity or current_identity.linked_user != request.user:
+            logger.info(f"Reconciling identity for user {request.user.id}")
             return self._reconcile_user_identity(request)
 
         canonical = current_identity.get_canonical_identity()
@@ -173,17 +155,19 @@ class AttributionMiddleware:
         except Identity.DoesNotExist:
             return None
 
-    def _reconcile_user_identity(
-        self, request: "AttributionHttpRequest"
-    ) -> Optional[Identity]:
+    def _reconcile_user_identity(self, request: "AttributionHttpRequest") -> Identity:
         from .reconciliation import reconcile_user_identity
 
         return reconcile_user_identity(request)
 
+    def _has_utm_params(self, request: "AttributionHttpRequest") -> bool:
+        return bool(request.META.get("utm_params", {}))
+
     def _record_touchpoint(
-        self, identity: Optional[Identity], request: "AttributionHttpRequest"
+        self, identity: Identity, request: "AttributionHttpRequest"
     ) -> Touchpoint:
         utm_params = request.META.get("utm_params", {})
+
         return Touchpoint.objects.create(
             identity=identity,
             url=request.build_absolute_uri(),

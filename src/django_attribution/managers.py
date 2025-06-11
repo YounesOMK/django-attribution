@@ -3,17 +3,15 @@ from typing import TYPE_CHECKING, Optional
 from .models import Identity
 
 if TYPE_CHECKING:
-    from .trackers import CookieIdentityTracker
+    pass
 
 
 class AttributionManager:
     def __init__(
         self,
         identity: Optional[Identity],
-        tracker: "CookieIdentityTracker",
     ):
         self.identity = identity
-        self.tracker = tracker
 
     def track_conversion(self, event: str, **kwargs):
         """Track a conversion event - will be implemented next"""

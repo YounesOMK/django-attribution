@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 from django.http import HttpRequest
 
 if TYPE_CHECKING:
-    from .middlewares import AttributionManager
+    from .trackers import CookieIdentityTracker
 
 
 class AttributionHttpRequest(HttpRequest):
-    attribution: "AttributionManager"
+    identity_tracker: "CookieIdentityTracker"
