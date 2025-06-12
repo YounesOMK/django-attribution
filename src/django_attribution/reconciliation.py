@@ -23,6 +23,7 @@ def reconcile_user_identity(request: AttributionHttpRequest) -> Identity:
 def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
     user = request.user
     assert user.is_authenticated
+
     tracker = request.identity_tracker
 
     current_identity = _get_current_identity_from_request(request, tracker)

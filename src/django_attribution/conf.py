@@ -8,14 +8,13 @@ from .settings import (
     DEFAULT_ATTRIBUTION_COOKIE_PATH,
     DEFAULT_ATTRIBUTION_COOKIE_SAMESITE,
     DEFAULT_ATTRIBUTION_COOKIE_SECURE,
+    DEFAULT_ATTRIBUTION_TRIGGER_HEADER,
+    DEFAULT_ATTRIBUTION_TRIGGER_VALUE,
     DEFAULT_BOT_PATTERNS,
     DEFAULT_DJANGO_ATTRIBUTION_CURRENCY,
     DEFAULT_FILTER_BOTS,
-    DEFAULT_LOG_VALIDATION_ERRORS,
     DEFAULT_MAX_UTM_LENGTH,
     DEFAULT_UTM_PARAMETERS,
-    DEFAULT_WINDOW_DAYS,
-    DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS,
     DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS,
 )
 
@@ -54,14 +53,6 @@ class DjangoAttributionSettings:
         )
 
     @property
-    def LOG_VALIDATION_ERRORS(self):
-        return getattr(
-            settings,
-            "DJANGO_ATTRIBUTION_LOG_VALIDATION_ERRORS",
-            DEFAULT_LOG_VALIDATION_ERRORS,
-        )
-
-    @property
     def CURRENCY(self):
         return getattr(
             settings,
@@ -75,22 +66,6 @@ class DjangoAttributionSettings:
             settings,
             "DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS",
             DJANGO_ATTRIBUTION_UTM_EXCLUDED_URLS,
-        )
-
-    @property
-    def ATTRIBUTION_EXCLUDED_URLS(self):
-        return getattr(
-            settings,
-            "DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS",
-            DJANGO_ATTRIBUTION_ATTRIBUTION_EXCLUDED_URLS,
-        )
-
-    @property
-    def WINDOW_DAYS(self):
-        return getattr(
-            settings,
-            "DJANGO_ATTRIBUTION_WINDOW_DAYS",
-            DEFAULT_WINDOW_DAYS,
         )
 
     @property
@@ -147,6 +122,22 @@ class DjangoAttributionSettings:
             settings,
             "DJANGO_ATTRIBUTION_COOKIE_SAMESITE",
             DEFAULT_ATTRIBUTION_COOKIE_SAMESITE,
+        )
+
+    @property
+    def ATTRIBUTION_TRIGGER_HEADER(self):
+        return getattr(
+            settings,
+            "DJANGO_ATTRIBUTION_TRIGGER_HEADER",
+            DEFAULT_ATTRIBUTION_TRIGGER_HEADER,
+        )
+
+    @property
+    def ATTRIBUTION_TRIGGER_VALUE(self):
+        return getattr(
+            settings,
+            "DJANGO_ATTRIBUTION_TRIGGER_VALUE",
+            DEFAULT_ATTRIBUTION_TRIGGER_VALUE,
         )
 
 

@@ -43,9 +43,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
                     if validated:
                         utm_params[param] = validated
                 except Exception as e:
-                    if django_attribution_settings.LOG_VALIDATION_ERRORS:
-                        logger.warning(f"Error extracting UTM parameter {param}: {e}")
-                    continue
+                    logger.warning(f"Error extracting UTM parameter {param}: {e}")
         return utm_params
 
     def _validate_utm_value(self, value: str, param_name: str) -> "Optional[str]":
@@ -53,8 +51,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
             decoded = unquote_plus(value)
 
             if len(decoded) > django_attribution_settings.MAX_UTM_LENGTH:
-                if django_attribution_settings.LOG_VALIDATION_ERRORS:
-                    logger.warning(f"UTM parameter {param_name} exceeds maximum length")
+                logger.warning(f"UTM parameter {param_name} exceeds maximum length")
                 return None
 
             cleaned = "".join(c for c in decoded if c.isprintable() or c.isspace())
@@ -63,8 +60,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
             return normalized if normalized else None
 
         except Exception as e:
-            if django_attribution_settings.LOG_VALIDATION_ERRORS:
-                logger.warning(f"Error processing UTM parameter {param_name}: {e}")
+            logger.warning(f"Error processing UTM parameter {param_name}: {e}")
             return None
 
 
@@ -75,28 +71,23 @@ class AttributionMiddleware:
 
     def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
         request.identity_tracker = self.tracker
-        identity = self._resolve_identity(request)
-
-        if not identity:
-            return self.get_response(request)
-
-        if self._has_utm_params(request):
-            self._record_touchpoint(identity, request)
-
+        request.identity = (
+            self._resolve_identity(request)
+            if self._should_resolve_identity(request)
+            else None
+        )
         response = self.get_response(request)
 
-        self.tracker.apply_to_response(request, response)
+        if request.identity:
+            if self._has_attribution_trigger(request):
+                self._record_touchpoint(request.identity, request)
+            self.tracker.apply_to_response(request, response)
 
         return response
 
-    def _resolve_identity(
-        self, request: "AttributionHttpRequest"
-    ) -> Optional[Identity]:
+    def _resolve_identity(self, request: "AttributionHttpRequest") -> Identity:
         if request.user.is_authenticated:
             return self._resolve_authenticated_user_identity(request)
-
-        if not self._has_utm_params(request):
-            return None
 
         return self._resolve_anonymous_identity(request)
 
@@ -105,7 +96,7 @@ class AttributionMiddleware:
     ) -> Identity:
         current_identity = self._get_current_identity_from_cookie(request)
 
-        if not current_identity or current_identity.linked_user:
+        if not current_identity:
             new_identity = Identity.objects.create()
             self.tracker.set_identity(new_identity)
             logger.info(f"Created new anonymous identity {new_identity.uuid}")
@@ -119,15 +110,8 @@ class AttributionMiddleware:
 
     def _resolve_authenticated_user_identity(
         self, request: "AttributionHttpRequest"
-    ) -> Optional[Identity]:
+    ) -> Identity:
         current_identity = self._get_current_identity_from_cookie(request)
-
-        if not (current_identity or self._has_utm_params(request)):
-            logger.info(
-                "No UTM parameters and no current identity"
-                "for user {request.user.id}, skipping identity creation"
-            )
-            return None
 
         if not current_identity or current_identity.linked_user != request.user:
             logger.info(f"Reconciling identity for user {request.user.id}")
@@ -160,8 +144,20 @@ class AttributionMiddleware:
 
         return reconcile_user_identity(request)
 
-    def _has_utm_params(self, request: "AttributionHttpRequest") -> bool:
-        return bool(request.META.get("utm_params", {}))
+    def _has_attribution_trigger(self, request: "AttributionHttpRequest") -> bool:
+        has_utm_params = bool(request.META.get("utm_params", {}))
+        has_tracking_header = (
+            request.META.get(django_attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
+            == django_attribution_settings.ATTRIBUTION_TRIGGER_VALUE
+        )
+        return has_utm_params or has_tracking_header
+
+    def _should_resolve_identity(self, request: "AttributionHttpRequest") -> bool:
+        if not request.user.is_authenticated:
+            return self._has_attribution_trigger(request)
+
+        current_identity = self._get_current_identity_from_cookie(request)
+        return bool(current_identity) or self._has_attribution_trigger(request)
 
     def _record_touchpoint(
         self, identity: Identity, request: "AttributionHttpRequest"

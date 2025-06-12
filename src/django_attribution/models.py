@@ -55,6 +55,17 @@ class Identity(BaseModel):
         indexes = [
             models.Index(fields=["created_at"]),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["linked_user"],
+                condition=models.Q(merged_into__isnull=True),
+                name="unique_canonical_identity_per_user",
+            ),
+            models.CheckConstraint(
+                check=~models.Q(merged_into=models.F("id")),
+                name="prevent_self_merge",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.uuid}"
