@@ -5,54 +5,58 @@ from django.contrib.auth.models import User
 
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
+from django_attribution.types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
 
-def reconcile_user_identity(request) -> Optional[Identity]:
+__all__ = ["reconcile_user_identity"]
+
+
+def reconcile_user_identity(request: AttributionHttpRequest) -> Identity:
     canonical_identity = _resolve_user_identity(request)
-    if canonical_identity:
-        request.attribution.tracker.set_identity(canonical_identity)
+    request.identity_tracker.set_identity(canonical_identity)
+
     return canonical_identity
 
 
-def _resolve_user_identity(request) -> Optional[Identity]:
+def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
     user = request.user
-    tracker = request.attribution.tracker
+    assert user.is_authenticated
+
+    tracker = request.identity_tracker
 
     current_identity = _get_current_identity_from_request(request, tracker)
     user_canonical_identity = _find_user_canonical_identity(user)
-    utm_params = request.META.get("utm_params", {})
 
-    # No current identity - skip to fallback logic
     if not current_identity:
-        if user_canonical_identity:
-            return user_canonical_identity
-        if utm_params:
-            return _create_canonical_identity_for_user(user)
-        return None
+        if not user_canonical_identity:
+            logger.info(f"Creating new canonical identity for user {user.id}")
 
-    # Current identity belongs to this user
+        return user_canonical_identity or _create_canonical_identity_for_user(user)
+
     if current_identity.linked_user == user:
-        canonical = current_identity.get_canonical_identity()
-        logger.info(f"Using user's canonical identity {canonical.uuid}")
-        return canonical
+        return current_identity.get_canonical_identity()
 
-    # Current identity is unlinked - we can claim it
     if not current_identity.linked_user:
         if user_canonical_identity:
+            logger.info(
+                f"Merging anonymous identity {current_identity.uuid} "
+                f"into user {user.id}'s canonical identity"
+            )
             _merge_identity_to_canonical(current_identity, user_canonical_identity)
             return user_canonical_identity
+
+        logger.info(f"Linking identity {current_identity.uuid} to user {user.id}")
         current_identity.linked_user = user
         current_identity.save(update_fields=["linked_user"])
         return current_identity
 
-    # Current identity belongs to different user - use fallback logic
-    if user_canonical_identity:
-        return user_canonical_identity
-    if utm_params:
+    if not user_canonical_identity:
+        logger.info(f"Creating new canonical identity for user {user.id}")
         return _create_canonical_identity_for_user(user)
-    return None
+
+    return user_canonical_identity
 
 
 def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
@@ -70,8 +74,6 @@ def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
     source.linked_user = canonical.linked_user
     source.save(update_fields=["merged_into", "linked_user"])
 
-    logger.info(f"Merged identity {source.uuid} into {canonical.uuid}")
-
 
 def _find_user_canonical_identity(user: User) -> Optional[Identity]:
     user_identities = Identity.objects.filter(
@@ -85,7 +87,7 @@ def _find_user_canonical_identity(user: User) -> Optional[Identity]:
 
 
 def _get_current_identity_from_request(
-    request, tracker: CookieIdentityTracker
+    request: AttributionHttpRequest, tracker: CookieIdentityTracker
 ) -> Optional[Identity]:
     identity_ref = tracker.get_identity_reference(request)
 
