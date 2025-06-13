@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_default_currency():
-    from django_attribution.conf import django_attribution_settings
+    from django_attribution.conf import attribution_settings
 
-    return django_attribution_settings.CURRENCY
+    return attribution_settings.CURRENCY
 
 
 class BaseModel(models.Model):

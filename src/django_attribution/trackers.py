@@ -4,7 +4,7 @@ from typing import Optional
 
 from django.http import HttpRequest, HttpResponse
 
-from .conf import django_attribution_settings
+from .conf import attribution_settings
 from .models import Identity
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class CookieIdentityTracker:
     def __init__(self):
         self._should_set_cookie = False
-        self.cookie_name = django_attribution_settings.COOKIE_NAME
+        self.cookie_name = attribution_settings.COOKIE_NAME
         self._pending_cookie_value = None
         self.delete_cookie_queued = False
 
@@ -58,18 +58,18 @@ class CookieIdentityTracker:
     ) -> None:
         cookie_kwargs = {
             "value": value,
-            "max_age": django_attribution_settings.COOKIE_MAX_AGE,
-            "path": django_attribution_settings.COOKIE_PATH,
-            "httponly": django_attribution_settings.COOKIE_HTTPONLY,
-            "samesite": django_attribution_settings.COOKIE_SAMESITE,
+            "max_age": attribution_settings.COOKIE_MAX_AGE,
+            "path": attribution_settings.COOKIE_PATH,
+            "httponly": attribution_settings.COOKIE_HTTPONLY,
+            "samesite": attribution_settings.COOKIE_SAMESITE,
         }
 
-        secure = django_attribution_settings.COOKIE_SECURE
+        secure = attribution_settings.COOKIE_SECURE
         if secure is None:
             secure = request.is_secure()
         cookie_kwargs["secure"] = secure
 
-        domain = django_attribution_settings.COOKIE_DOMAIN
+        domain = attribution_settings.COOKIE_DOMAIN
         if domain:
             cookie_kwargs["domain"] = domain
 
@@ -79,8 +79,8 @@ class CookieIdentityTracker:
     def delete_cookie(self, response: HttpResponse) -> None:
         response.delete_cookie(
             self.cookie_name,
-            path=django_attribution_settings.COOKIE_PATH,
-            domain=django_attribution_settings.COOKIE_DOMAIN,
+            path=attribution_settings.COOKIE_PATH,
+            domain=attribution_settings.COOKIE_DOMAIN,
         )
         logger.debug(f"Deleted attribution cookie: {self.cookie_name}")
 

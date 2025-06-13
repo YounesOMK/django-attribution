@@ -4,7 +4,7 @@ from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
 
-from .conf import django_attribution_settings
+from .conf import attribution_settings
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
 from .trackers import CookieIdentityTracker
@@ -35,7 +35,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
         self, request: "AttributionHttpRequest"
     ) -> "Dict[str, str]":
         utm_params = {}
-        for param in django_attribution_settings.UTM_PARAMETERS:
+        for param in attribution_settings.UTM_PARAMETERS:
             value = request.GET.get(param, "").strip()
             if value:
                 try:
@@ -50,7 +50,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
         try:
             decoded = unquote_plus(value)
 
-            if len(decoded) > django_attribution_settings.MAX_UTM_LENGTH:
+            if len(decoded) > attribution_settings.MAX_UTM_LENGTH:
                 logger.warning(f"UTM parameter {param_name} exceeds maximum length")
                 return None
 
@@ -147,8 +147,8 @@ class AttributionMiddleware:
     def _has_attribution_trigger(self, request: "AttributionHttpRequest") -> bool:
         has_utm_params = bool(request.META.get("utm_params", {}))
         has_tracking_header = (
-            request.META.get(django_attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
-            == django_attribution_settings.ATTRIBUTION_TRIGGER_VALUE
+            request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
+            == attribution_settings.ATTRIBUTION_TRIGGER_VALUE
         )
         return has_utm_params or has_tracking_header
 

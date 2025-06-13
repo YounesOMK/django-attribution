@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.http import HttpResponse
 
-from django_attribution.conf import django_attribution_settings
+from django_attribution.conf import attribution_settings
 
 
 def test_should_extract_all_standard_utm_parameters(
@@ -245,12 +245,12 @@ def test_utm_parameter_constants_should_include_all_standard_parameters(
         "utm_term",
         "utm_content",
     }
-    assert set(django_attribution_settings.UTM_PARAMETERS) == set(expected_params)
+    assert set(attribution_settings.UTM_PARAMETERS) == set(expected_params)
 
 
 def test_should_have_reasonable_maximum_length_limit(utm_parameter_middleware):
     """Should define a reasonable maximum length for UTM parameters"""
-    assert 50 <= django_attribution_settings.MAX_UTM_LENGTH <= 500
+    assert 50 <= attribution_settings.MAX_UTM_LENGTH <= 500
 
 
 def test_should_ignore_requests_from_robots_and_crawlers(

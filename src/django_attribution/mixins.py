@@ -1,6 +1,6 @@
 from django.http import HttpRequest
 
-from .conf import django_attribution_settings
+from .conf import attribution_settings
 
 
 class RequestExclusionMixin:
@@ -11,16 +11,14 @@ class RequestExclusionMixin:
         user_agent = request.META.get("HTTP_USER_AGENT", "").lower()
         return any(
             bot_pattern in user_agent
-            for bot_pattern in django_attribution_settings.BOT_PATTERNS
+            for bot_pattern in attribution_settings.BOT_PATTERNS
         )
 
     def _should_skip_utm_params_recording(self, request: HttpRequest) -> bool:
-        if self._matches_url_patterns(
-            request, django_attribution_settings.UTM_EXCLUDED_URLS
-        ):
+        if self._matches_url_patterns(request, attribution_settings.UTM_EXCLUDED_URLS):
             return True
 
-        if django_attribution_settings.FILTER_BOTS and self._is_bot_request(request):
+        if attribution_settings.FILTER_BOTS and self._is_bot_request(request):
             return True
 
         return False
