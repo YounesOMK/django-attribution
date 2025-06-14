@@ -178,4 +178,11 @@ class AttributionMiddleware:
             utm_campaign=utm_params.get("utm_campaign", ""),
             utm_term=utm_params.get("utm_term", ""),
             utm_content=utm_params.get("utm_content", ""),
+            fbclid=utm_params.get("fbclid", ""),
+            gclid=utm_params.get("gclid", ""),
+            msclkid=utm_params.get("msclkid", ""),
+            ttclid=utm_params.get("ttclid", ""),
+            li_fat_id=utm_params.get("li_fat_id", ""),
+            twclid=utm_params.get("twclid", ""),
+            igshid=utm_params.get("igshid", ""),
         )

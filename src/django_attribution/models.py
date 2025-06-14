@@ -161,11 +161,21 @@ class Touchpoint(BaseModel):
 
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
+    # utm_params
     utm_source = models.CharField(max_length=255, blank=True, db_index=True)
     utm_medium = models.CharField(max_length=255, blank=True, db_index=True)
     utm_campaign = models.CharField(max_length=255, blank=True, db_index=True)
     utm_term = models.CharField(max_length=255, blank=True)
     utm_content = models.CharField(max_length=255, blank=True)
+
+    # click tracking params
+    fbclid = models.CharField(max_length=255, blank=True)
+    gclid = models.CharField(max_length=255, blank=True)
+    msclkid = models.CharField(max_length=255, blank=True)
+    ttclid = models.CharField(max_length=255, blank=True)
+    li_fat_id = models.CharField(max_length=255, blank=True)
+    twclid = models.CharField(max_length=255, blank=True)
+    igshid = models.CharField(max_length=255, blank=True)
 
     objects = models.Manager.from_queryset(TouchpointQuerySet)()
 

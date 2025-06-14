@@ -4,6 +4,13 @@ UTM_PARAMETERS = [
     "utm_campaign",
     "utm_term",
     "utm_content",
+    "fbclid",
+    "gclid",
+    "msclkid",
+    "ttclid",
+    "li_fat_id",
+    "twclid",
+    "igshid",
 ]
 
 DEFAULTS = {
