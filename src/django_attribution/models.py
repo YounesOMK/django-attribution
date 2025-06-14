@@ -208,6 +208,7 @@ class Conversion(BaseModel):
     source_object_id = models.PositiveIntegerField(null=True, blank=True)
     source_object = GenericForeignKey("source_content_type", "source_object_id")
 
+    is_confirmed = models.BooleanField(default=True)
     objects = models.Manager.from_queryset(ConversionQuerySet)()
 
     class Meta:
