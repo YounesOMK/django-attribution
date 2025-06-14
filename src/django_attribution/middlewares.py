@@ -4,6 +4,8 @@ from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
 
+from django_attribution.utils import extract_client_ip
+
 from .conf import attribution_settings
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
@@ -97,7 +99,10 @@ class AttributionMiddleware:
         current_identity = self._get_current_identity_from_cookie(request)
 
         if not current_identity:
-            new_identity = Identity.objects.create()
+            new_identity = Identity.objects.create(
+                ip_address=extract_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            )
             self.tracker.set_identity(new_identity)
             logger.info(f"Created new anonymous identity {new_identity.uuid}")
             return new_identity
@@ -173,12 +178,4 @@ class AttributionMiddleware:
             utm_campaign=utm_params.get("utm_campaign", ""),
             utm_term=utm_params.get("utm_term", ""),
             utm_content=utm_params.get("utm_content", ""),
-            ip_address=self._extract_client_ip(request),
-            user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
-
-    def _extract_client_ip(self, request: "AttributionHttpRequest") -> "Optional[str]":
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR")
