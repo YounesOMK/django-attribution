@@ -39,36 +39,35 @@ class ConversionQuerySet(BaseQuerySet):
     def record(
         self,
         request: HttpRequest,
-        event_type: str,
+        event: str,
         value: Optional[float] = None,
         currency: Optional[str] = None,
-        confirmed: bool = True,
+        is_confirmed: bool = True,
         source_object=None,
         custom_data: Optional[dict] = None,
     ):
         allowed_events = getattr(request, "_allowed_conversion_events", None)
-        if allowed_events is not None and event_type not in allowed_events:
+        if allowed_events is not None and event not in allowed_events:
             logger.warning(
-                f"Attempted to record conversion '{event_type}' "
+                f"Attempted to record conversion '{event}' "
                 f"not declared in allowed events. "
                 f"Allowed: {allowed_events}"
             )
             raise ValueError(
-                f"Conversion event '{event_type}' not allowed. "
+                f"Conversion event '{event}' not allowed. "
                 f"Allowed events: {sorted(allowed_events)}"
             )
 
         if not hasattr(request, "identity") or not request.identity:
             logger.warning(
-                f"Cannot record conversion '{event_type}': "
-                f"no identity found on request"
+                f"Cannot record conversion '{event}': " f"no identity found on request"
             )
             return None
 
         conversion_data = {
             "identity": request.identity,
-            "event": event_type,
-            "is_confirmed": confirmed,
+            "event": event,
+            "is_confirmed": is_confirmed,
         }
 
         if value is not None:
@@ -92,8 +91,7 @@ class ConversionQuerySet(BaseQuerySet):
         conversion.save()
 
         logger.info(
-            f"Recorded conversion '{event_type}' "
-            f"for identity {request.identity.uuid}"
+            f"Recorded conversion '{event}' " f"for identity {request.identity.uuid}"
         )
         return conversion
 
