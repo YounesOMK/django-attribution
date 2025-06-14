@@ -1,4 +1,4 @@
-UTM_PARAMETERS = [
+TRACKING_PARAMETERS = [
     "utm_source",
     "utm_medium",
     "utm_campaign",

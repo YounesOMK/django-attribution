@@ -102,7 +102,7 @@ class Touchpoint(BaseModel):
 
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
-    # utm_params
+    # tracking_params
     utm_source = models.CharField(max_length=255, blank=True, db_index=True)
     utm_medium = models.CharField(max_length=255, blank=True, db_index=True)
     utm_campaign = models.CharField(max_length=255, blank=True, db_index=True)
