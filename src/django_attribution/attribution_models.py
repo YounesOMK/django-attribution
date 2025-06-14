@@ -58,7 +58,7 @@ class ORMBasedAttributionModel(AttributionModel):
         touchpoints = self.get_touchpoints(touchpoints)
 
         annotations: Dict[str, Union[Subquery, Value]] = {}
-        for param in attribution_settings.UTM_PARAMETERS:
+        for param in attribution_settings.TRACKING_PARAMETERS:
             field_name = param.replace("utm_", "attributed_")
             annotations[field_name] = Subquery(
                 touchpoints.values(param)[:1], output_field=models.CharField()

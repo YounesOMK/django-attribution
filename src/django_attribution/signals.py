@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 @receiver(user_logged_in)
 def handle_attribution_on_login(sender, request, user, **kwargs):
-    utm_params = request.META.get("utm_params", {})
-    if not utm_params:
+    tracking_params = request.META.get("tracking_params", {})
+    if not tracking_params:
         return
 
     try:

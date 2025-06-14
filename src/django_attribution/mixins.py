@@ -18,7 +18,7 @@ class RequestExclusionMixin:
             for bot_pattern in attribution_settings.BOT_PATTERNS
         )
 
-    def _should_skip_utm_params_recording(self, request: HttpRequest) -> bool:
+    def _should_skip_tracking_params_recording(self, request: HttpRequest) -> bool:
         if self._matches_url_patterns(request, attribution_settings.UTM_EXCLUDED_URLS):
             return True
 

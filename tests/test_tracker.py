@@ -9,12 +9,12 @@ from django_attribution.models import Identity, Touchpoint
 
 
 @pytest.mark.django_db
-def test_new_visitor_cookie_creation_with_utm_parameters(
-    attribution_middleware, utm_parameter_middleware, make_request
+def test_new_visitor_cookie_creation_with_tracking_parameters(
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
     request = make_request(
         "/landing-page/",
-        utm_params={
+        tracking_params={
             "utm_source": "google",
             "utm_medium": "cpc",
             "utm_campaign": "summer_sale",
@@ -22,7 +22,7 @@ def test_new_visitor_cookie_creation_with_utm_parameters(
     )
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None
@@ -47,12 +47,12 @@ def test_new_visitor_cookie_creation_with_utm_parameters(
 
 @pytest.mark.django_db
 def test_new_visitor_cookie_has_correct_name(
-    attribution_middleware, utm_parameter_middleware, make_request
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
-    request = make_request("/", utm_params={"utm_source": "facebook"})
+    request = make_request("/", tracking_params={"utm_source": "facebook"})
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None
@@ -66,12 +66,12 @@ def test_new_visitor_cookie_has_correct_name(
 
 @pytest.mark.django_db
 def test_new_visitor_cookie_has_90_day_expiry(
-    attribution_middleware, utm_parameter_middleware, make_request
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
-    request = make_request("/", utm_params={"utm_source": "email"})
+    request = make_request("/", tracking_params={"utm_source": "email"})
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None
@@ -88,12 +88,12 @@ def test_new_visitor_cookie_has_90_day_expiry(
 
 @pytest.mark.django_db
 def test_new_visitor_cookie_has_security_attributes(
-    attribution_middleware, utm_parameter_middleware, make_request
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
-    request = make_request("/", utm_params={"utm_source": "twitter"})
+    request = make_request("/", tracking_params={"utm_source": "twitter"})
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None
@@ -111,13 +111,13 @@ def test_new_visitor_cookie_has_security_attributes(
 
 
 @pytest.mark.django_db
-def test_new_visitor_cookie_not_set_without_utm_parameters(
-    attribution_middleware, utm_parameter_middleware, make_request
+def test_new_visitor_cookie_not_set_without_tracking_parameters(
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
     request = make_request("/")  # No UTM parameters
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None
@@ -133,15 +133,15 @@ def test_new_visitor_cookie_not_set_without_utm_parameters(
 
 @pytest.mark.django_db
 def test_cookie_value_matches_created_identity_uuid(
-    attribution_middleware, utm_parameter_middleware, make_request
+    attribution_middleware, tracking_parameter_middleware, make_request
 ):
     request = make_request(
         "/signup/",
-        utm_params={"utm_source": "instagram", "utm_campaign": "influencer_promo"},
+        tracking_params={"utm_source": "instagram", "utm_campaign": "influencer_promo"},
     )
     request.user = AnonymousUser()
 
-    utm_parameter_middleware(request)
+    tracking_parameter_middleware(request)
 
     with patch.object(
         attribution_middleware.tracker, "get_identity_reference", return_value=None

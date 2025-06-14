@@ -25,29 +25,29 @@ class UTMParameterMiddleware(RequestExclusionMixin):
         self.get_response = get_response
 
     def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
-        if self._should_skip_utm_params_recording(request):
+        if self._should_skip_tracking_params_recording(request):
             return self.get_response(request)
 
-        request.META["utm_params"] = self._extract_utm_parameters(request)
+        request.META["tracking_params"] = self._extract_tracking_parameters(request)
 
         response = self.get_response(request)
 
         return response
 
-    def _extract_utm_parameters(
+    def _extract_tracking_parameters(
         self, request: AttributionHttpRequest
     ) -> Dict[str, str]:
-        utm_params = {}
-        for param in attribution_settings.UTM_PARAMETERS:
+        tracking_params = {}
+        for param in attribution_settings.TRACKING_PARAMETERS:
             value = request.GET.get(param, "").strip()
             if value:
                 try:
                     validated = self._validate_utm_value(value, param)
                     if validated:
-                        utm_params[param] = validated
+                        tracking_params[param] = validated
                 except Exception as e:
                     logger.warning(f"Error extracting UTM parameter {param}: {e}")
-        return utm_params
+        return tracking_params
 
     def _validate_utm_value(self, value: str, param_name: str) -> Optional[str]:
         try:
@@ -151,12 +151,12 @@ class AttributionMiddleware:
         return reconcile_user_identity(request)
 
     def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
-        has_utm_params = bool(request.META.get("utm_params", {}))
+        has_tracking_params = bool(request.META.get("tracking_params", {}))
         has_tracking_header = (
             request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
             == attribution_settings.ATTRIBUTION_TRIGGER_VALUE
         )
-        return has_utm_params or has_tracking_header
+        return has_tracking_params or has_tracking_header
 
     def _should_resolve_identity(self, request: AttributionHttpRequest) -> bool:
         if not request.user.is_authenticated:
@@ -168,22 +168,22 @@ class AttributionMiddleware:
     def _record_touchpoint(
         self, identity: Identity, request: AttributionHttpRequest
     ) -> Touchpoint:
-        utm_params = request.META.get("utm_params", {})
+        tracking_params = request.META.get("tracking_params", {})
 
         return Touchpoint.objects.create(
             identity=identity,
             url=request.build_absolute_uri(),
             referrer=request.META.get("HTTP_REFERER", ""),
-            utm_source=utm_params.get("utm_source", ""),
-            utm_medium=utm_params.get("utm_medium", ""),
-            utm_campaign=utm_params.get("utm_campaign", ""),
-            utm_term=utm_params.get("utm_term", ""),
-            utm_content=utm_params.get("utm_content", ""),
-            fbclid=utm_params.get("fbclid", ""),
-            gclid=utm_params.get("gclid", ""),
-            msclkid=utm_params.get("msclkid", ""),
-            ttclid=utm_params.get("ttclid", ""),
-            li_fat_id=utm_params.get("li_fat_id", ""),
-            twclid=utm_params.get("twclid", ""),
-            igshid=utm_params.get("igshid", ""),
+            utm_source=tracking_params.get("utm_source", ""),
+            utm_medium=tracking_params.get("utm_medium", ""),
+            utm_campaign=tracking_params.get("utm_campaign", ""),
+            utm_term=tracking_params.get("utm_term", ""),
+            utm_content=tracking_params.get("utm_content", ""),
+            fbclid=tracking_params.get("fbclid", ""),
+            gclid=tracking_params.get("gclid", ""),
+            msclkid=tracking_params.get("msclkid", ""),
+            ttclid=tracking_params.get("ttclid", ""),
+            li_fat_id=tracking_params.get("li_fat_id", ""),
+            twclid=tracking_params.get("twclid", ""),
+            igshid=tracking_params.get("igshid", ""),
         )

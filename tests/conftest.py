@@ -29,10 +29,10 @@ def request_factory():
 
 @pytest.fixture
 def make_request(request_factory):
-    def _make_request(path="/", utm_params=None, other_params=None):
+    def _make_request(path="/", tracking_params=None, other_params=None):
         params = {}
-        if utm_params:
-            params.update(utm_params)
+        if tracking_params:
+            params.update(tracking_params)
         if other_params:
             params.update(other_params)
         return request_factory.get(path, params)
@@ -41,7 +41,7 @@ def make_request(request_factory):
 
 
 @pytest.fixture
-def utm_parameter_middleware():
+def tracking_parameter_middleware():
     get_response = Mock(return_value=HttpResponse("OK"))
     return UTMParameterMiddleware(get_response)
 
