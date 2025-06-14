@@ -54,12 +54,17 @@ def test_should_ignore_empty_and_whitespace_only_parameters(
         "utm_campaign": "   ",
         "utm_term": "\t\n",
         "utm_content": "valid_content",
+        "fbclid": "1234567890",
     }
     request = make_request(utm_params=utm_params)
 
     utm_parameter_middleware(request)
 
-    expected_params = {"utm_source": "google", "utm_content": "valid_content"}
+    expected_params = {
+        "utm_source": "google",
+        "utm_content": "valid_content",
+        "fbclid": "1234567890",
+    }
     assert request.META["utm_params"] == expected_params
 
 
@@ -244,6 +249,13 @@ def test_utm_parameter_constants_should_include_all_standard_parameters(
         "utm_campaign",
         "utm_term",
         "utm_content",
+        "fbclid",
+        "gclid",
+        "msclkid",
+        "ttclid",
+        "li_fat_id",
+        "twclid",
+        "igshid",
     }
     assert set(attribution_settings.UTM_PARAMETERS) == set(expected_params)
 

@@ -75,7 +75,6 @@ class IdentityAdmin(admin.ModelAdmin):
 @admin.register(Touchpoint)
 class TouchpointAdmin(admin.ModelAdmin):
     list_display = (
-        "identity",
         "utm_source",
         "utm_medium",
         "utm_campaign",
@@ -96,6 +95,20 @@ class TouchpointAdmin(admin.ModelAdmin):
                     "utm_campaign",
                     "utm_term",
                     "utm_content",
+                )
+            },
+        ),
+        (
+            "Click Tracking Parameters",
+            {
+                "fields": (
+                    "fbclid",
+                    "gclid",
+                    "msclkid",
+                    "ttclid",
+                    "li_fat_id",
+                    "twclid",
+                    "igshid",
                 )
             },
         ),

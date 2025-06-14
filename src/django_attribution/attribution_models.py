@@ -22,6 +22,13 @@ class AttributionModel(ABC):
             "attributed_campaign",
             "attributed_term",
             "attributed_content",
+            "attributed_fbclid",
+            "attributed_gclid",
+            "attributed_msclkid",
+            "attributed_ttclid",
+            "attributed_li_fat_id",
+            "attributed_twclid",
+            "attributed_igshid",
         ]
 
 
