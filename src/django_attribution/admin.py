@@ -28,11 +28,29 @@ class ConversionInline(admin.TabularInline):
     )
     fields = (
         "created_at",
-        "conversion_type",
+        "event",
         "conversion_value",
         "currency",
     )
     ordering = ("-created_at",)
+
+
+class IsCanonicalFilter(admin.SimpleListFilter):
+    title = "canonical status"
+    parameter_name = "is_canonical"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("yes", "Canonical"),
+            ("no", "Merged"),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(merged_into__isnull=True)
+        if self.value() == "no":
+            return queryset.filter(merged_into__isnull=False)
+        return queryset
 
 
 @admin.register(Identity)
@@ -43,7 +61,7 @@ class IdentityAdmin(admin.ModelAdmin):
         "created_at",
         "is_canonical",
     )
-    list_filter = ("created_at",)
+    list_filter = ("created_at", IsCanonicalFilter)
     search_fields = ("linked_user__username",)
     readonly_fields = (
         "uuid",
@@ -64,10 +82,13 @@ class IdentityAdmin(admin.ModelAdmin):
 
     inlines = [TouchpointInline, ConversionInline]
     date_hierarchy = "created_at"
-    ordering = ("-created_at",)
+    ordering = (
+        "merged_into",
+        "-created_at",
+    )
 
     def is_canonical(self, obj: Identity) -> bool:
-        return obj.get_canonical_identity() == obj
+        return obj.is_canonical()
 
     is_canonical.boolean = True  # type: ignore
 
@@ -121,19 +142,19 @@ class TouchpointAdmin(admin.ModelAdmin):
 @admin.register(Conversion)
 class ConversionAdmin(admin.ModelAdmin):
     list_display = (
-        "conversion_type",
+        "event",
         "conversion_value",
         "currency",
         "created_at",
         "is_confirmed",
     )
     list_filter = (
-        "conversion_type",
+        "event",
         "currency",
         "created_at",
     )
     search_fields = (
-        "conversion_type",
+        "event",
         "identity__uuid",
     )
     readonly_fields = (
@@ -149,7 +170,7 @@ class ConversionAdmin(admin.ModelAdmin):
                 "fields": (
                     "uuid",
                     "identity",
-                    "conversion_type",
+                    "event",
                     "created_at",
                     "updated_at",
                     "is_confirmed",

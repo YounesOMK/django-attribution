@@ -36,16 +36,16 @@ from django_attribution.shortcuts import record_conversion
 def register(request):
     user = create_user(...)
     record_conversion(request, 'signup')
-    
+
     if request.POST.get('start_trial'):
         record_conversion(request, 'trial_start')
         return redirect('trial')
 
 # Unconfirmed conversions (for async flows)
-@conversion_events('purchase')  
+@conversion_events('purchase')
 def checkout(request):
     order = create_order(...)
-    
+
     record_conversion(
         request,
         'purchase',
@@ -67,7 +67,7 @@ def payment_webhook(request):
 from django_attribution.models import Conversion
 
 conversions = Conversion.objects.filter(
-    conversion_type='purchase',
+    event='purchase',
     is_confirmed=True  # Only completed payments
 ).with_attribution(window_days=30)
 
@@ -94,10 +94,10 @@ DJANGO_ATTRIBUTION = {
     # Cookie settings
     'COOKIE_MAX_AGE': 60 * 60 * 24 * 90,  # 90 days
     'COOKIE_DOMAIN': '.example.com',       # For subdomains
-    
+
     # Bot filtering
     'FILTER_BOTS': True,
-    
+
     # Exclude paths
     'UTM_EXCLUDED_URLS': ['/admin/', '/api/'],
 }

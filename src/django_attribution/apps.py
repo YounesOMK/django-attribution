@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 class DjangoAttributionConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "django_attribution"
+    verbose_name = "Django Attribution"
 
     def ready(self):
         from .signals import handle_attribution_on_login
