@@ -3,9 +3,10 @@
 import sys
 from pathlib import Path
 
-# Add src to Python path so django_attribution can be imported
+# Add django_attribution to Python path for imports
+
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(BASE_DIR / "src"))
+sys.path.insert(0, str(BASE_DIR / "django_attribution"))
 
 # Basic Django settings
 SECRET_KEY = "test-secret-key"
