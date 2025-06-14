@@ -67,6 +67,4 @@ DEFAULTS = {
     # Attribution Trigger Configuration
     "ATTRIBUTION_TRIGGER_HEADER": "HTTP_X_ATTRIBUTION_TRIGGER",
     "ATTRIBUTION_TRIGGER_VALUE": "true",
-    # Identity Merge Configuration
-    "MAX_IDENTITY_MERGE_DEPTH": 20,
 }
