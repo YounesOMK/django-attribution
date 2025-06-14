@@ -1,12 +1,12 @@
+UTM_PARAMETERS = [
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+]
+
 DEFAULTS = {
-    # UTM Parameter Configuration
-    "UTM_PARAMETERS": [
-        "utm_source",
-        "utm_medium",
-        "utm_campaign",
-        "utm_term",
-        "utm_content",
-    ],
     "MAX_UTM_LENGTH": 200,
     # Bot Filtering Configuration
     "FILTER_BOTS": True,

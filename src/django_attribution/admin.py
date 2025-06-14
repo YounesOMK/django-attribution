@@ -53,7 +53,7 @@ class IdentityAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("uuid", "linked_user")},
+            {"fields": ("uuid", "linked_user", "ip_address", "user_agent")},
         ),
         (
             "Tracking",
@@ -108,11 +108,11 @@ class TouchpointAdmin(admin.ModelAdmin):
 @admin.register(Conversion)
 class ConversionAdmin(admin.ModelAdmin):
     list_display = (
-        "identity",
         "conversion_type",
         "conversion_value",
         "currency",
         "created_at",
+        "is_confirmed",
     )
     list_filter = (
         "conversion_type",
@@ -126,10 +126,23 @@ class ConversionAdmin(admin.ModelAdmin):
     readonly_fields = (
         "uuid",
         "created_at",
+        "updated_at",
     )
 
     fieldsets = (
-        (None, {"fields": ("uuid", "identity", "conversion_type", "created_at")}),
+        (
+            None,
+            {
+                "fields": (
+                    "uuid",
+                    "identity",
+                    "conversion_type",
+                    "created_at",
+                    "updated_at",
+                    "is_confirmed",
+                )
+            },
+        ),
         ("Value", {"fields": ("conversion_value", "currency")}),
         ("Source", {"fields": ("source_content_type", "source_object_id")}),
     )
