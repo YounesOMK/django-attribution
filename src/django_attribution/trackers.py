@@ -9,6 +9,10 @@ from .models import Identity
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "CookieIdentityTracker",
+]
+
 
 class CookieIdentityTracker:
     def __init__(self):

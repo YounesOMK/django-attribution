@@ -15,6 +15,13 @@ from .querysets import (
 logger = logging.getLogger(__name__)
 
 
+__all__ = [
+    "Identity",
+    "Touchpoint",
+    "Conversion",
+]
+
+
 def get_default_currency():
     from django_attribution.conf import attribution_settings
 

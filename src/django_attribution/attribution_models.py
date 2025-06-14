@@ -7,6 +7,15 @@ from django.db.models import JSONField, OuterRef, Subquery, Value
 
 from django_attribution.conf import attribution_settings
 
+__all__ = [
+    "AttributionModel",
+    "ORMBasedAttributionModel",
+    "LastTouchAttributionModel",
+    "FirstTouchAttributionModel",
+    "last_touch",
+    "first_touch",
+]
+
 
 class AttributionModel(ABC):
     @abstractmethod

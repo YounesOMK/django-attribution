@@ -2,6 +2,10 @@ from django.conf import settings
 
 from .settings import DEFAULTS, UTM_PARAMETERS
 
+__all__ = [
+    "attribution_settings",
+]
+
 
 class AttributionSettings:
     def __init__(self):

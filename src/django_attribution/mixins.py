@@ -2,6 +2,10 @@ from django.http import HttpRequest
 
 from .conf import attribution_settings
 
+__all__ = [
+    "RequestExclusionMixin",
+]
+
 
 class RequestExclusionMixin:
     def _matches_url_patterns(self, request: HttpRequest, url_patterns: list) -> bool:

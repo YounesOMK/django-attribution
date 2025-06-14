@@ -8,6 +8,11 @@ from django_attribution.types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "conversion_events",
+    "ConversionEventsMixin",
+]
+
 
 def conversion_events(*events: str):
     allowed_events = set(events) if events else None

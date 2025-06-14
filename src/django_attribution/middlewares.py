@@ -14,6 +14,11 @@ from .types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "UTMParameterMiddleware",
+    "AttributionMiddleware",
+]
+
 
 class UTMParameterMiddleware(RequestExclusionMixin):
     def __init__(self, get_response):
