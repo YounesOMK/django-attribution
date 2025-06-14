@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
 from django_attribution.types import AttributionHttpRequest
+from django_attribution.utils import extract_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,9 @@ def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
         if not user_canonical_identity:
             logger.info(f"Creating new canonical identity for user {user.id}")
 
-        return user_canonical_identity or _create_canonical_identity_for_user(user)
+        return user_canonical_identity or _create_canonical_identity_for_user(
+            user, request
+        )
 
     if current_identity.linked_user == user:
         return current_identity.get_canonical_identity()
@@ -54,7 +57,7 @@ def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
 
     if not user_canonical_identity:
         logger.info(f"Creating new canonical identity for user {user.id}")
-        return _create_canonical_identity_for_user(user)
+        return _create_canonical_identity_for_user(user, request)
 
     return user_canonical_identity
 
@@ -100,7 +103,17 @@ def _get_current_identity_from_request(
         return None
 
 
-def _create_canonical_identity_for_user(user: User) -> Identity:
-    identity = Identity.objects.create(linked_user=user)
+def _create_canonical_identity_for_user(
+    user: User,
+    request: AttributionHttpRequest,
+) -> Identity:
+    user_agent = request.META.get("HTTP_USER_AGENT", "")
+    ip_address = extract_client_ip(request)
+
+    identity = Identity.objects.create(
+        linked_user=user,
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
     logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
     return identity

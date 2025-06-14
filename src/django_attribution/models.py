@@ -48,6 +48,9 @@ class Identity(BaseModel):
         related_name="attribution_identities",
     )
 
+    user_agent = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
     objects = models.Manager.from_queryset(IdentityQuerySet)()
 
     class Meta:
@@ -158,15 +161,11 @@ class Touchpoint(BaseModel):
 
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
-    page_title = models.CharField(max_length=255, blank=True)
     utm_source = models.CharField(max_length=255, blank=True, db_index=True)
     utm_medium = models.CharField(max_length=255, blank=True, db_index=True)
     utm_campaign = models.CharField(max_length=255, blank=True, db_index=True)
     utm_term = models.CharField(max_length=255, blank=True)
     utm_content = models.CharField(max_length=255, blank=True)
-    custom_parameters = models.JSONField(default=dict, blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True)
 
     objects = models.Manager.from_queryset(TouchpointQuerySet)()
 

@@ -38,6 +38,7 @@ class ConversionInline(admin.TabularInline):
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
     list_display = (
+        "ip_address",
         "linked_user",
         "created_at",
         "is_canonical",
