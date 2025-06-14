@@ -30,6 +30,12 @@ class TouchpointQuerySet(BaseQuerySet):
 
 
 class ConversionQuerySet(BaseQuerySet):
+    def confirmed(self):
+        return self.filter(is_confirmed=True)
+
+    def unconfirmed(self):
+        return self.filter(is_confirmed=False)
+
     def record(
         self,
         request: HttpRequest,
