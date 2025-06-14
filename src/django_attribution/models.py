@@ -71,7 +71,9 @@ class Identity(BaseModel):
         ]
 
     def __str__(self):
-        return f"{self.uuid}"
+        if self.linked_user:
+            return f"Identity {self.uuid} (User: {self.linked_user.username})"
+        return f"Identity {self.uuid} (Anonymous)"
 
     def get_canonical_identity(self):
         visited = set()
