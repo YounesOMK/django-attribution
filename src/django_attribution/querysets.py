@@ -67,7 +67,7 @@ class ConversionQuerySet(BaseQuerySet):
 
         conversion_data = {
             "identity": request.identity,
-            "conversion_type": event_type,
+            "event": event_type,
             "is_confirmed": confirmed,
         }
 

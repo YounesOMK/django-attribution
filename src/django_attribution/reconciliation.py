@@ -2,7 +2,6 @@ import logging
 from typing import Optional
 
 from django.contrib.auth.models import User
-from django.db import IntegrityError
 
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
@@ -74,18 +73,11 @@ def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
     source.touchpoints.update(identity=canonical)
     source.conversions.update(identity=canonical)
 
-    try:
-        source.merged_into = canonical
-        source.linked_user = canonical.linked_user
-        source.save(update_fields=["merged_into", "linked_user"])
-    except IntegrityError:
-        logger.error(
-            f"Database constraint prevented merge of {source.uuid}"
-            "into {canonical.uuid}: {e}. "
-            "This likely indicates a self-merge attempt or data corruption."
-        )
+    source.merged_into = canonical
+    source.linked_user = canonical.linked_user
+    source.save(update_fields=["merged_into", "linked_user"])
 
-        return
+    source.merged_identities.update(merged_into=canonical)
 
 
 def _find_user_canonical_identity(user: User) -> Optional[Identity]:
