@@ -26,18 +26,8 @@ class AttributionModel(ABC):
 
     def _get_attribution_fields(self) -> List[str]:
         return [
-            "attributed_source",
-            "attributed_medium",
-            "attributed_campaign",
-            "attributed_term",
-            "attributed_content",
-            "attributed_fbclid",
-            "attributed_gclid",
-            "attributed_msclkid",
-            "attributed_ttclid",
-            "attributed_li_fat_id",
-            "attributed_twclid",
-            "attributed_igshid",
+            f"attributed_{param.replace('utm_', '')}"
+            for param in attribution_settings.TRACKING_PARAMETERS
         ]
 
 
