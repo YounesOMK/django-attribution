@@ -79,9 +79,11 @@ class Identity(BaseModel):
         visited = set()
         current = self
         path: List["Identity"] = []
-        max_depth = 100
+        from django_attribution.conf import attribution_settings
 
-        while current and current.id not in visited and len(path) < max_depth:
+        max_merge_depth = attribution_settings.MAX_IDENTITY_MERGE_DEPTH
+
+        while current and current.id not in visited and len(path) < max_merge_depth:
             visited.add(current.id)
             path.append(current)
 
@@ -90,9 +92,10 @@ class Identity(BaseModel):
 
             current = current.merged_into
 
-        if len(path) >= max_depth:
+        if len(path) >= max_merge_depth:
             logger.error(
-                f"Identity chain too deep (>{max_depth}) starting from {self.uuid}"
+                f"Identity chain too deep (>{max_merge_depth})"
+                " starting from {self.uuid}"
             )
             return self
 
