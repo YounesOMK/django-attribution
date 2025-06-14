@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import Dict, Optional
 from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
@@ -10,11 +10,7 @@ from .conf import attribution_settings
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
 from .trackers import CookieIdentityTracker
-
-if TYPE_CHECKING:
-    from typing import Dict
-
-    from .types import AttributionHttpRequest
+from .types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +19,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
+    def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
         if self._should_skip_utm_params_recording(request):
             return self.get_response(request)
 
@@ -34,8 +30,8 @@ class UTMParameterMiddleware(RequestExclusionMixin):
         return response
 
     def _extract_utm_parameters(
-        self, request: "AttributionHttpRequest"
-    ) -> "Dict[str, str]":
+        self, request: AttributionHttpRequest
+    ) -> Dict[str, str]:
         utm_params = {}
         for param in attribution_settings.UTM_PARAMETERS:
             value = request.GET.get(param, "").strip()
@@ -48,7 +44,7 @@ class UTMParameterMiddleware(RequestExclusionMixin):
                     logger.warning(f"Error extracting UTM parameter {param}: {e}")
         return utm_params
 
-    def _validate_utm_value(self, value: str, param_name: str) -> "Optional[str]":
+    def _validate_utm_value(self, value: str, param_name: str) -> Optional[str]:
         try:
             decoded = unquote_plus(value)
 
@@ -114,7 +110,7 @@ class AttributionMiddleware:
         return canonical_identity
 
     def _resolve_authenticated_user_identity(
-        self, request: "AttributionHttpRequest"
+        self, request: AttributionHttpRequest
     ) -> Identity:
         current_identity = self._get_current_identity_from_cookie(request)
 
@@ -133,7 +129,7 @@ class AttributionMiddleware:
         return canonical
 
     def _get_current_identity_from_cookie(
-        self, request: "AttributionHttpRequest"
+        self, request: AttributionHttpRequest
     ) -> Optional[Identity]:
         identity_ref = self.tracker.get_identity_reference(request)
         if not identity_ref:
@@ -144,12 +140,12 @@ class AttributionMiddleware:
         except Identity.DoesNotExist:
             return None
 
-    def _reconcile_user_identity(self, request: "AttributionHttpRequest") -> Identity:
+    def _reconcile_user_identity(self, request: AttributionHttpRequest) -> Identity:
         from .reconciliation import reconcile_user_identity
 
         return reconcile_user_identity(request)
 
-    def _has_attribution_trigger(self, request: "AttributionHttpRequest") -> bool:
+    def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
         has_utm_params = bool(request.META.get("utm_params", {}))
         has_tracking_header = (
             request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
@@ -157,7 +153,7 @@ class AttributionMiddleware:
         )
         return has_utm_params or has_tracking_header
 
-    def _should_resolve_identity(self, request: "AttributionHttpRequest") -> bool:
+    def _should_resolve_identity(self, request: AttributionHttpRequest) -> bool:
         if not request.user.is_authenticated:
             return self._has_attribution_trigger(request)
 
@@ -165,7 +161,7 @@ class AttributionMiddleware:
         return bool(current_identity) or self._has_attribution_trigger(request)
 
     def _record_touchpoint(
-        self, identity: Identity, request: "AttributionHttpRequest"
+        self, identity: Identity, request: AttributionHttpRequest
     ) -> Touchpoint:
         utm_params = request.META.get("utm_params", {})
 
