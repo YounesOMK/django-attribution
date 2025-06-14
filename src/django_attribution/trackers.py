@@ -34,13 +34,7 @@ class CookieIdentityTracker:
             logger.debug(f"Invalid UUID format in attribution cookie: {cookie_value}")
             return None
 
-    def set_identity(self, identity: Optional[Identity]) -> None:
-        if not identity:
-            logger.debug("No identity to set, skipping")
-            self._pending_cookie_value = None
-            self._should_set_cookie = False
-            return
-
+    def set_identity(self, identity: Identity) -> None:
         self._pending_cookie_value = str(identity.uuid)
         self._should_set_cookie = True
         logger.debug(f"Queued setting attribution cookie to: {identity.uuid}")
