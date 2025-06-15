@@ -2,7 +2,8 @@ import logging
 from typing import Optional
 
 from django.db import models
-from django.http import HttpRequest
+
+from .types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class ConversionQuerySet(BaseQuerySet):
 
     def record(
         self,
-        request: HttpRequest,
+        request: AttributionHttpRequest,
         event: str,
         value: Optional[float] = None,
         currency: Optional[str] = None,

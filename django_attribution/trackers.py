@@ -2,10 +2,11 @@ import logging
 import uuid
 from typing import Optional
 
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpResponse
 
 from .conf import attribution_settings
 from .models import Identity
+from .types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class CookieIdentityTracker:
         self._pending_cookie_value = None
         self.delete_cookie_queued = False
 
-    def get_identity_reference(self, request: HttpRequest) -> Optional[str]:
+    def get_identity_reference(self, request: AttributionHttpRequest) -> Optional[str]:
         cookie_value = request.COOKIES.get(self.cookie_name)
 
         if not cookie_value:
@@ -39,7 +40,9 @@ class CookieIdentityTracker:
         self._should_set_cookie = True
         logger.debug(f"Queued setting attribution cookie to: {identity.uuid}")
 
-    def apply_to_response(self, request: HttpRequest, response: HttpResponse) -> None:
+    def apply_to_response(
+        self, request: AttributionHttpRequest, response: HttpResponse
+    ) -> None:
         if self.delete_cookie_queued:
             self.delete_cookie(response)
             self.delete_cookie_queued = False
@@ -52,7 +55,7 @@ class CookieIdentityTracker:
         self._should_set_cookie = False
 
     def _set_attribution_cookie(
-        self, request: HttpRequest, response: HttpResponse, value: str
+        self, request: AttributionHttpRequest, response: HttpResponse, value: str
     ) -> None:
         cookie_kwargs = {
             "value": value,
