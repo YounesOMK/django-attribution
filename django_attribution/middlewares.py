@@ -82,7 +82,7 @@ class AttributionMiddleware:
         response = self.get_response(request)
 
         if request.identity:
-            if self._has_attribution_trigger(request):
+            if self._has_tracking_data(request):
                 self._record_touchpoint(request.identity, request)
             self.tracker.apply_to_response(request, response)
 
@@ -111,6 +111,8 @@ class AttributionMiddleware:
         canonical_identity = current_identity.get_canonical_identity()
         if canonical_identity != current_identity:
             self.tracker.set_identity(canonical_identity)
+        else:
+            self.tracker.refresh_identity(canonical_identity)
 
         return canonical_identity
 
@@ -150,6 +152,10 @@ class AttributionMiddleware:
 
         return reconcile_user_identity(request)
 
+    def _has_tracking_data(self, request: AttributionHttpRequest) -> bool:
+        tracking_params = request.META.get("tracking_params", {})
+        return bool(tracking_params)
+
     def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
         has_tracking_params = bool(request.META.get("tracking_params", {}))
         has_tracking_header = (
@@ -159,9 +165,6 @@ class AttributionMiddleware:
         return has_tracking_params or has_tracking_header
 
     def _should_resolve_identity(self, request: AttributionHttpRequest) -> bool:
-        if not request.user.is_authenticated:
-            return self._has_attribution_trigger(request)
-
         current_identity = self._get_current_identity_from_cookie(request)
         return bool(current_identity) or self._has_attribution_trigger(request)
 
