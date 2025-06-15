@@ -37,6 +37,9 @@ class ConversionQuerySet(BaseQuerySet):
     def unconfirmed(self):
         return self.filter(is_confirmed=False)
 
+    def identified(self):
+        return self.exclude(identity__isnull=True)
+
     def record(
         self,
         request: AttributionHttpRequest,

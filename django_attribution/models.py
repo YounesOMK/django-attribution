@@ -175,6 +175,3 @@ class Conversion(BaseModel):
         else:
             value_str = ""
         return f"{self.event}{value_str} - {self.created_at}"
-
-    def is_monetary(self):
-        return self.conversion_value is not None and self.conversion_value > 0
