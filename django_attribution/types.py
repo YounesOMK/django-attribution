@@ -1,5 +1,5 @@
 # types.py
-from typing import TYPE_CHECKING, Any, Callable, Optional, Set
+from typing import TYPE_CHECKING, Optional, Set
 
 from django.http import HttpRequest
 
@@ -16,4 +16,4 @@ class AttributionHttpRequest(HttpRequest):
     identity_tracker: "CookieIdentityTracker"
     identity: Optional["Identity"]
     _allowed_conversion_events: Optional[Set[str]]
-    record_conversion: Callable[..., Any]
+    _require_identity_for_conversions: bool
