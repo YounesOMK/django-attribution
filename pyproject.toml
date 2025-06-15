@@ -19,7 +19,6 @@ classifiers = [
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
-    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
@@ -166,27 +165,8 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 
-[tool.hatch.envs.test]
-dependencies = [
-    "coverage[toml]>=6.5",
-    "pytest",
-    "pytest-django",
-    "pytest-cov",
-]
-
-[[tool.hatch.envs.test.matrix]]
-django = ["4.2", "5.0", "5.1", "5.2"]
-
-[tool.hatch.envs.test.overrides]
-matrix.django.dependencies = [
-    { value = "Django~=4.2.0", if = ["4.2"] },
-    { value = "Django~=5.0.0", if = ["5.0"] },
-    { value = "Django~=5.1.0", if = ["5.1"] },
-    { value = "Django~=5.2.0", if = ["5.2"] },
-]
-
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true

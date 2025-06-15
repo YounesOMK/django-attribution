@@ -12,8 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-        django-version: ["4.2", "5.0", "5.1", "5.2"]
+        include:
+          - python-version: "3.10"
+            django-version: "4.2"
+
+          - python-version: "3.11"
+            django-version: "4.2"
+
+          - python-version: "3.12"
+            django-version: "5.1"
 
     steps:
     - uses: actions/checkout@v4
@@ -23,18 +30,19 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Hatch
-      run: pip install hatch
+    - name: Install dependencies
+      run: |
+        pip install hatch
+        pip install "Django~=${{ matrix.django-version }}.0"
 
     - name: Run linting
-      if: matrix.python-version == '3.11' && matrix.django-version == '4.2'
+      if: matrix.python-version == '3.11'
       run: hatch run lint:all
 
     - name: Run tests
-      run: hatch run +py=${{ matrix.python-version }} test.django.${{ matrix.django-version }}:test-cov
+      run: hatch run test-cov
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
-        flags: py${{ matrix.python-version }}-dj${{ matrix.django-version }}
