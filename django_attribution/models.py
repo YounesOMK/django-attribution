@@ -38,6 +38,8 @@ class BaseModel(models.Model):
 
 
 class Identity(BaseModel):
+    """Represents a unique user identity for attribution tracking."""
+
     merged_into = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,

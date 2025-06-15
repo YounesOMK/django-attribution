@@ -1,0 +1,26 @@
+site_name: Django Attribution
+site_description: Django package for tracking campaign conversions with UTM parameters
+site_author: Younes Oumakhou
+
+repo_name: younesoumakhou/django-attribution
+repo_url: https://github.com/younesoumakhou/django-attribution
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - tables
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+    - Configuration: getting-started/configuration.md
