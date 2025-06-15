@@ -53,8 +53,6 @@ docs = [
     "myst-parser>=0.18",
 ]
 
-[project.urls]
-
 
 [tool.hatch.version]
 path = "django_attribution/__init__.py"
@@ -105,7 +103,7 @@ dependencies = [
     "django-stubs[compatible-mypy]>=4.2.0",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --config-file=mypy-django.ini {args:django_attribution tests}"
+typing = "mypy --config-file=pyproject.toml {args:django_attribution tests}"
 style = [
     "ruff check {args:.}",
     "ruff format --check --diff {args:.}",
