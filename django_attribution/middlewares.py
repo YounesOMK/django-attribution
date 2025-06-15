@@ -72,7 +72,7 @@ class AttributionMiddleware:
         self.get_response = get_response
         self.tracker = CookieIdentityTracker()
 
-    def __call__(self, request: "AttributionHttpRequest") -> HttpResponse:
+    def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
         request.identity_tracker = self.tracker
         request.identity = (
             self._resolve_identity(request)
