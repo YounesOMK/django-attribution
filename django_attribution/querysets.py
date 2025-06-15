@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from django.db import models
 
@@ -48,6 +48,9 @@ class ConversionQuerySet(BaseQuerySet):
         custom_data: Optional[dict] = None,
     ):
         allowed_events = getattr(request, "_allowed_conversion_events", None)
+        require_identity = getattr(request, "_require_identity_for_conversions", True)
+        current_identity = request.identity
+
         if allowed_events is not None and event not in allowed_events:
             logger.warning(
                 f"Attempted to record conversion '{event}' "
@@ -59,14 +62,15 @@ class ConversionQuerySet(BaseQuerySet):
                 f"Allowed events: {sorted(allowed_events)}"
             )
 
-        if not hasattr(request, "identity") or not request.identity:
+        if require_identity and (not current_identity):
             logger.warning(
-                f"Cannot record conversion '{event}': " f"no identity found on request"
+                f"Cannot record conversion '{event}': "
+                "no identity required but not found"
             )
             return None
 
-        conversion_data = {
-            "identity": request.identity,
+        conversion_data: Dict[str, Any] = {
+            "identity": current_identity,
             "event": event,
             "is_confirmed": is_confirmed,
         }
@@ -92,7 +96,8 @@ class ConversionQuerySet(BaseQuerySet):
         conversion.save()
 
         logger.info(
-            f"Recorded conversion '{event}' " f"for identity {request.identity.uuid}"
+            f"Recorded conversion '{event}' "
+            f"for identity {current_identity.uuid if current_identity else 'anonymous'}"
         )
         return conversion
 
