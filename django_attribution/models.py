@@ -170,8 +170,8 @@ class Conversion(BaseModel):
         ordering = ["-created_at"]
 
     def __str__(self):
-        if self.conversion_value:
-            value_str = f" ({self.currency} {self.conversion_value})"
+        if self.conversion_value is not None:
+            value_str = f" ({self.currency} {self.conversion_value:.2f})"
         else:
             value_str = ""
         return f"{self.event}{value_str} - {self.created_at}"

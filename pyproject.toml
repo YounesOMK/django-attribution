@@ -150,6 +150,7 @@ parallel = true
 omit = [
     "django_attribution/__init__.py",
     "*/migrations/*",
+    "django_attribution/admin.py",
 ]
 
 [tool.coverage.report]
