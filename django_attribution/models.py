@@ -6,8 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
-from django_attribution.conf import attribution_settings
-
 from .querysets import (
     ConversionQuerySet,
     IdentityQuerySet,
@@ -22,42 +20,6 @@ __all__ = [
     "Touchpoint",
     "Conversion",
 ]
-
-
-def add_attribution_properties(cls):
-    """
-    Dynamically add attribution properties to the model class
-    based on TRACKING_PARAMETERS from settings.
-    """
-
-    def make_attribution_property(param_name):
-        """Create a property for a specific attribution parameter."""
-        # Convert utm_source -> source, utm_medium -> medium, etc.
-        json_key = (
-            param_name.replace("utm_", "")
-            if param_name.startswith("utm_")
-            else param_name
-        )
-
-        def property_getter(self):
-            if not self.attribution_data:
-                return None
-            return self.attribution_data.get(json_key)
-
-        # Set proper names for the property
-        property_getter.__name__ = f"attributed_{json_key}"
-        property_getter.__doc__ = f"Attribution data for {param_name}"
-
-        return property(property_getter)
-
-    # Create and add properties for all tracking parameters
-    for param in attribution_settings.TRACKING_PARAMETERS:
-        json_key = param.replace("utm_", "") if param.startswith("utm_") else param
-        property_name = f"attributed_{json_key}"
-        attribution_property = make_attribution_property(param)
-        setattr(cls, property_name, attribution_property)
-
-    return cls
 
 
 def get_default_currency():
