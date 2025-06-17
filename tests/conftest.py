@@ -77,3 +77,27 @@ def authenticated_user():
 @pytest.fixture
 def anonymous_user():
     return AnonymousUser()
+
+
+@pytest.fixture
+def identity():
+    return Identity.objects.create(ip_address="192.168.1.1")
+
+
+@pytest.fixture
+def request_with_identity(make_request, identity):
+    request = make_request("/test/")
+    request.identity = identity
+    return request
+
+
+@pytest.fixture
+def request_without_identity(make_request):
+    request = make_request("/test/")
+    request.identity = None
+    return request
+
+
+@pytest.fixture
+def source_user(authenticated_user):
+    return authenticated_user
