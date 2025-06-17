@@ -16,7 +16,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # ...
     # After AuthenticationMiddleware:
-    'django_attribution.middleware.UTMParameterMiddleware',  # Extracts UTM from URLs
+    'django_attribution.middleware.TrackingParameterMiddleware',  # Extracts UTM from URLs
     'django_attribution.middleware.AttributionMiddleware',    # Core attribution tracking
 ]
 ```
@@ -43,18 +43,18 @@ def register(request):
 def register(request):
     user = create_user(...)
     record_conversion(request, 'signup')
-    
+
     if request.POST.get('start_trial'):
         record_conversion(request, 'trial_start')
         return redirect('trial')
-    
+
     return redirect('dashboard')
 
 # Unconfirmed conversions (for payment flows)
 @conversion_events('purchase')
 def checkout(request):
     order = create_order(...)
-    
+
     record_conversion(
         request,
         'purchase',
@@ -109,13 +109,13 @@ DJANGO_ATTRIBUTION = {
     'COOKIE_SECURE': None,                 # Auto-detects
     'COOKIE_HTTPONLY': True,
     'COOKIE_SAMESITE': 'Lax',
-    
+
     # Bot filtering
     'FILTER_BOTS': True,
-    
+
     # URL exclusions
     'UTM_EXCLUDED_URLS': ['/admin/', '/api/'],
-    
+
     # Other settings
     'CURRENCY': 'USD',
     'MAX_UTM_LENGTH': 200,
@@ -130,7 +130,7 @@ DJANGO_ATTRIBUTION = {
 
 For decoupled architectures (separate frontend and backend API):
 
-1. Skip `UTMParameterMiddleware` - it only extracts from URL query parameters
+1. Skip `TrackingParameterMiddleware` - it only extracts from URL query parameters
 2. Keep `AttributionMiddleware` for identity management
 3. Create an endpoint that receives tracking parameters and creates touchpoints
 4. Frontend extracts UTM parameters from the URL and sends them to your endpoint
@@ -192,19 +192,19 @@ Click IDs:
 <details>
 <summary><strong>Best Practices</strong></summary>
 
-**Always declare conversion events**  
+**Always declare conversion events**
 Use the `@conversion_events` decorator to explicitly declare which events a view can track. This prevents accidental tracking.
 
-**Handle payment flows properly**  
+**Handle payment flows properly**
 Use `is_confirmed=False` for pending payments. Update to `is_confirmed=True` only after payment confirmation.
 
-**Filter analytics queries**  
+**Filter analytics queries**
 Always use `.confirmed()` when analyzing conversion data to exclude unconfirmed conversions.
 
-**Configure for subdomains**  
+**Configure for subdomains**
 Set `COOKIE_DOMAIN = '.yourdomain.com'` if you use multiple subdomains.
 
-**Test tracking**  
+**Test tracking**
 Add `?utm_source=test&utm_campaign=test` to URLs during development. Check for the `_dj_attr_id` cookie in browser DevTools.
 </details>
 

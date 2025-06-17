@@ -15,12 +15,12 @@ from .types import AttributionHttpRequest
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    "UTMParameterMiddleware",
+    "TrackingParameterMiddleware",
     "AttributionMiddleware",
 ]
 
 
-class UTMParameterMiddleware(RequestExclusionMixin):
+class TrackingParameterMiddleware(RequestExclusionMixin):
     def __init__(self, get_response):
         self.get_response = get_response
 
