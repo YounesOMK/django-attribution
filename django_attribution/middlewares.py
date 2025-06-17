@@ -74,9 +74,11 @@ class AttributionMiddleware:
 
     def __call__(self, request: AttributionHttpRequest) -> HttpResponse:
         request.identity_tracker = self.tracker
+        current_identity = self._get_current_identity_from_cookie(request)
+
         request.identity = (
-            self._resolve_identity(request)
-            if self._should_resolve_identity(request)
+            self._resolve_identity(request, current_identity)
+            if self._should_resolve_identity(request, current_identity)
             else None
         )
         response = self.get_response(request)
@@ -88,17 +90,21 @@ class AttributionMiddleware:
 
         return response
 
-    def _resolve_identity(self, request: "AttributionHttpRequest") -> Identity:
+    def _resolve_identity(
+        self,
+        request: "AttributionHttpRequest",
+        current_identity: Optional[Identity],
+    ) -> Identity:
         if request.user.is_authenticated:
-            return self._resolve_authenticated_user_identity(request)
+            return self._resolve_authenticated_user_identity(request, current_identity)
 
-        return self._resolve_anonymous_identity(request)
+        return self._resolve_anonymous_identity(request, current_identity)
 
     def _resolve_anonymous_identity(
-        self, request: "AttributionHttpRequest"
+        self,
+        request: "AttributionHttpRequest",
+        current_identity: Optional[Identity],
     ) -> Identity:
-        current_identity = self._get_current_identity_from_cookie(request)
-
         if not current_identity:
             new_identity = Identity.objects.create(
                 ip_address=extract_client_ip(request),
@@ -117,10 +123,10 @@ class AttributionMiddleware:
         return canonical_identity
 
     def _resolve_authenticated_user_identity(
-        self, request: AttributionHttpRequest
+        self,
+        request: AttributionHttpRequest,
+        current_identity: Optional[Identity],
     ) -> Identity:
-        current_identity = self._get_current_identity_from_cookie(request)
-
         if not current_identity or current_identity.linked_user != request.user:
             logger.info(f"Reconciling identity for user {request.user.id}")
             return self._reconcile_user_identity(request)
@@ -164,8 +170,11 @@ class AttributionMiddleware:
         )
         return has_tracking_params or has_tracking_header
 
-    def _should_resolve_identity(self, request: AttributionHttpRequest) -> bool:
-        current_identity = self._get_current_identity_from_cookie(request)
+    def _should_resolve_identity(
+        self,
+        request: AttributionHttpRequest,
+        current_identity: Optional[Identity],
+    ) -> bool:
         return bool(current_identity) or self._has_attribution_trigger(request)
 
     def _record_touchpoint(
