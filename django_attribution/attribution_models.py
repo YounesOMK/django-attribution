@@ -9,7 +9,10 @@ from django.db.models import (
     Subquery,
     Value,
 )
-from django.db.models.functions import Coalesce, JSONObject  # type: ignore
+from django.db.models.functions import (  # type: ignore[attr-defined]
+    Coalesce,
+    JSONObject,
+)
 
 from django_attribution.conf import attribution_settings
 
