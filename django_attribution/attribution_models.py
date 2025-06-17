@@ -9,7 +9,7 @@ from django.db.models import (
     Subquery,
     Value,
 )
-from django.db.models.functions import (  # type: ignore[attr-defined]
+from django.db.models.functions import (
     Coalesce,
     JSONObject,
 )
