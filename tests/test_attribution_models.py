@@ -56,9 +56,9 @@ def test_last_touch_attribution_with_touchpoints_in_window(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source == "email"
-    assert attributed_conversion.attributed_medium == "newsletter"
-    assert attributed_conversion.attributed_campaign == "campaign3"
+    assert attributed_conversion.attribution_data.get("utm_source") == "email"
+    assert attributed_conversion.attribution_data.get("utm_medium") == "newsletter"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign3"
 
 
 @pytest.mark.django_db
@@ -90,11 +90,11 @@ def test_last_touch_attribution_with_multiple_conversions(identity, now):
 
     conv1, conv2 = list(attributed_conversions)
 
-    assert conv1.attributed_source == "google"
-    assert conv1.attributed_campaign == "search"
+    assert conv1.attribution_data.get("utm_source") == "google"
+    assert conv1.attribution_data.get("utm_campaign") == "search"
 
-    assert conv2.attributed_source == "facebook"
-    assert conv2.attributed_campaign == "social"
+    assert conv2.attribution_data.get("utm_source") == "facebook"
+    assert conv2.attribution_data.get("utm_campaign") == "social"
 
 
 @pytest.mark.django_db
@@ -133,9 +133,9 @@ def test_first_touch_attribution_with_touchpoints_in_window(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source == "google"
-    assert attributed_conversion.attributed_medium == "cpc"
-    assert attributed_conversion.attributed_campaign == "campaign1"
+    assert attributed_conversion.attribution_data.get("utm_source") == "google"
+    assert attributed_conversion.attribution_data.get("utm_medium") == "cpc"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign1"
 
 
 @pytest.mark.django_db
@@ -170,11 +170,11 @@ def test_first_touch_vs_last_touch_attribution_difference(identity, now):
     ).first()
     assert last_touch_result is not None
 
-    assert first_touch_result.attributed_source == "google"
-    assert first_touch_result.attributed_campaign == "first"
+    assert first_touch_result.attribution_data.get("utm_source") == "google"
+    assert first_touch_result.attribution_data.get("utm_campaign") == "first"
 
-    assert last_touch_result.attributed_source == "facebook"
-    assert last_touch_result.attributed_campaign == "last"
+    assert last_touch_result.attribution_data.get("utm_source") == "facebook"
+    assert last_touch_result.attribution_data.get("utm_campaign") == "last"
 
 
 @pytest.mark.django_db
@@ -196,9 +196,9 @@ def test_attribution_with_no_touchpoints_in_window_returns_empty(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source is None
-    assert attributed_conversion.attributed_medium is None
-    assert attributed_conversion.attributed_campaign is None
+    assert attributed_conversion.attribution_data.get("utm_source") is None
+    assert attributed_conversion.attribution_data.get("utm_medium") is None
+    assert attributed_conversion.attribution_data.get("utm_campaign") is None
 
 
 @pytest.mark.django_db
@@ -213,9 +213,9 @@ def test_attribution_with_no_touchpoints_at_all_returns_empty(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source is None
-    assert attributed_conversion.attributed_medium is None
-    assert attributed_conversion.attributed_campaign is None
+    assert attributed_conversion.attribution_data.get("utm_source") is None
+    assert attributed_conversion.attribution_data.get("utm_medium") is None
+    assert attributed_conversion.attribution_data.get("utm_campaign") is None
 
 
 @pytest.mark.django_db
@@ -246,8 +246,8 @@ def test_attribution_with_custom_window_days_parameter(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source == "google"
-    assert attributed_conversion.attributed_campaign == "within_7_days"
+    assert attributed_conversion.attribution_data.get("utm_source") == "google"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "within_7_days"
 
 
 @pytest.mark.django_db
@@ -274,25 +274,25 @@ def test_attribution_with_different_window_sizes(identity, now):
         Conversion.objects.filter(id=conversion.id), window_days=1
     ).first()
     assert result_1day is not None
-    assert result_1day.attributed_source is None
+    assert result_1day.attribution_data.get("utm_source") is None
 
     result_7day = model.apply(
         Conversion.objects.filter(id=conversion.id), window_days=7
     ).first()
     assert result_7day is not None
-    assert result_7day.attributed_source == "recent"
+    assert result_7day.attribution_data.get("utm_source") == "recent"
 
     result_30day = model.apply(
         Conversion.objects.filter(id=conversion.id), window_days=30
     ).first()
     assert result_30day is not None
-    assert result_30day.attributed_source == "recent"
+    assert result_30day.attribution_data.get("utm_source") == "recent"
 
     result_60day = model.apply(
         Conversion.objects.filter(id=conversion.id), window_days=60
     ).first()
     assert result_60day is not None
-    assert result_60day.attributed_source == "recent"
+    assert result_60day.attribution_data.get("utm_source") == "recent"
 
 
 @pytest.mark.django_db
@@ -312,6 +312,7 @@ def test_attribution_metadata_annotation_last_touch(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 14,
+        "channel_windows": None,
     }
 
 
@@ -332,6 +333,7 @@ def test_attribution_metadata_annotation_first_touch(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "FirstTouchAttributionModel",
         "window_days": 45,
+        "channel_windows": None,
     }
 
 
@@ -350,6 +352,7 @@ def test_attribution_metadata_with_default_window(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 30,
+        "channel_windows": None,
     }
 
 
@@ -388,8 +391,8 @@ def test_touchpoints_exactly_at_window_boundary(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source == "inside"
-    assert attributed_conversion.attributed_campaign == "just_inside"
+    assert attributed_conversion.attribution_data.get("utm_source") == "inside"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "just_inside"
 
 
 @pytest.mark.django_db
@@ -424,7 +427,7 @@ def test_window_boundary_with_first_touch_attribution(identity, now):
     attributed_conversion = attributed_conversions.first()
     assert attributed_conversion is not None
 
-    assert attributed_conversion.attributed_source == "boundary"
+    assert attributed_conversion.attribution_data.get("utm_source") == "boundary"
 
 
 @pytest.mark.django_db
@@ -448,8 +451,8 @@ def test_convenience_instances_last_touch_and_first_touch(identity, now):
     last_touch_result = last_touch.apply(conversions_qs).first()
     assert last_touch_result is not None
 
-    assert first_touch_result.attributed_source == "first"
-    assert last_touch_result.attributed_source == "last"
+    assert first_touch_result.attribution_data.get("utm_source") == "first"
+    assert last_touch_result.attribution_data.get("utm_source") == "last"
 
     assert isinstance(first_touch, FirstTouchAttributionModel)
     assert isinstance(last_touch, LastTouchAttributionModel)
