@@ -8,7 +8,7 @@ from django_attribution.models import Conversion, Identity, Touchpoint
 
 
 @pytest.mark.django_db
-def test_new_anonymous_visitor_with_utm_parameters_creates_identity_and_touchpoint(
+def test_new_anonymous_visitor_with_tracking_parameters_creates_identity_and_touchpoint(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     request = make_request(
@@ -53,7 +53,7 @@ def test_new_anonymous_visitor_with_utm_parameters_creates_identity_and_touchpoi
 
 
 @pytest.mark.django_db
-def test_new_anonymous_visitor_without_utm_parameters_creates_nothing(
+def test_new_anonymous_visitor_without_tracking_parameters_creates_nothing(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     request = make_request("/some-page/")  # No tracking params

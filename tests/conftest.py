@@ -5,7 +5,10 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.http import HttpResponse
 from django.test import RequestFactory
 
-from django_attribution.middlewares import AttributionMiddleware, UTMParameterMiddleware
+from django_attribution.middlewares import (
+    AttributionMiddleware,
+    TrackingParameterMiddleware,
+)
 from django_attribution.models import Conversion, Identity, Touchpoint
 
 
@@ -45,13 +48,13 @@ def make_request(request_factory):
 @pytest.fixture
 def tracking_parameter_middleware():
     get_response = Mock(return_value=HttpResponse("OK"))
-    return UTMParameterMiddleware(get_response)
+    return TrackingParameterMiddleware(get_response)
 
 
 @pytest.fixture
 def attribution_middleware_with_utm():
     utm_get_response = Mock(return_value=HttpResponse("OK"))
-    utm_middleware = UTMParameterMiddleware(utm_get_response)
+    utm_middleware = TrackingParameterMiddleware(utm_get_response)
 
     attribution_get_response = Mock(return_value=HttpResponse("OK"))
     attribution_middleware = AttributionMiddleware(attribution_get_response)
