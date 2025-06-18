@@ -38,6 +38,22 @@ class BaseModel(models.Model):
 
 
 class Identity(BaseModel):
+    """
+    Represents a trackable visitor identity for attribution purposes.
+
+    An Identity is created when a visitor arrives with tracking parameters
+    (UTM codes, click IDs) or attribution triggers. It can be anonymous
+    (browser/device-based) or authenticated (linked to a User account).
+    Identities can be merged when an anonymous visitor logs in, consolidating
+    their touchpoint and conversion history under a single canonical identity.
+
+    Attributes:
+        merged_into: Reference to canonical identity if this one was merged
+        linked_user: Django User this identity belongs to (if authenticated)
+        user_agent: Browser user agent string from first visit
+        ip_address: IP address from first visit
+    """
+
     merged_into = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -93,6 +109,26 @@ class Identity(BaseModel):
 
 
 class Touchpoint(BaseModel):
+    """
+    Records a single marketing touch when a visitor arrives with tracking data.
+
+    A Touchpoint captures the marketing context (UTM parameters, click IDs)
+    and visit details (URL, referrer) for each visit that contains
+    tracking parameters. These touchpoints form the attribution trail that gets
+    analyzed when determining which marketing efforts led to conversions.
+
+    Attributes:
+        identity: The Identity this touchpoint belongs to
+        url: Full URL the visitor landed on
+        referrer: HTTP referrer header value
+        utm_source: Marketing source (e.g., 'google', 'facebook')
+        utm_medium: Marketing medium (e.g., 'cpc', 'email', 'social')
+        utm_campaign: Campaign identifier
+        utm_term: Keywords/search terms (typically for paid search)
+        utm_content: Ad content identifier for A/B testing
+        fbclid, gclid, etc.: Platform-specific click tracking IDs
+    """
+
     identity = models.ForeignKey(
         Identity,
         on_delete=models.SET_NULL,
@@ -133,6 +169,26 @@ class Touchpoint(BaseModel):
 
 
 class Conversion(BaseModel):
+    """
+    Records a conversion event that can be attributed to marketing touchpoints.
+
+    A Conversion represents a valuable action taken by a visitor, such as a
+    purchase, signup, or subscription. Conversions are linked to identities
+    and can later be attributed to specific marketing touchpoints using
+    attribution models to understand which campaigns drove the most value.
+
+    Attributes:
+        identity: The Identity that performed this conversion
+        event: Type of conversion (e.g., 'purchase', 'signup', 'trial')
+        conversion_value: Monetary value of this conversion
+        currency: Currency code for the conversion value
+        custom_data: Additional conversion metadata as JSON
+        source_content_type: Django content type of related object
+        source_object_id: ID of related object (e.g., Order, Subscription)
+        source_object: Generic foreign key to related object
+        is_confirmed: Whether this conversion is confirmed/valid
+    """
+
     identity = models.ForeignKey(
         Identity,
         on_delete=models.SET_NULL,
