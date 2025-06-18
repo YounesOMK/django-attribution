@@ -111,7 +111,7 @@ def test_record_conversion_without_identity_when_required_logs_warning(
         mock_logger.warning.assert_called_once()
         call_args = mock_logger.warning.call_args[0][0]
         assert "Cannot record conversion 'signup'" in call_args
-        assert "no identity required but not found" in call_args
+        assert "identity required but not found" in call_args
 
 
 @pytest.mark.django_db
