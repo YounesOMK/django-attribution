@@ -26,6 +26,18 @@ __all__ = [
 
 
 class SingleTouchAttributionModel:
+    """
+    Base class for single-touch attribution models.
+
+    Single-touch attribution assigns 100% of the conversion credit to one
+    touchpoint in the customer journey. Subclasses implement different
+    strategies for choosing which touchpoint gets the credit (first-touch,
+    last-touch.) by overriding the prepare_touchpoints method.
+
+    The model applies attribution windows to limit which touchpoints are
+    considered, with support for different window lengths per traffic source.
+    """
+
     def prepare_touchpoints(self, touchpoints_qs):
         raise NotImplementedError
 

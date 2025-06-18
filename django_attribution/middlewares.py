@@ -21,6 +21,16 @@ __all__ = [
 
 
 class TrackingParameterMiddleware(RequestExclusionMixin):
+    """
+    Extracts and validates tracking parameters from incoming requests.
+
+    This middleware processes UTM parameters and click tracking IDs from
+    request URLs, validates and sanitizes the values, then stores them in
+    request.META['tracking_params'] for use by AttributionMiddleware.
+
+    Must be placed before AttributionMiddleware in MIDDLEWARE setting.
+    """
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -68,6 +78,19 @@ class TrackingParameterMiddleware(RequestExclusionMixin):
 
 
 class AttributionMiddleware:
+    """
+    Core middleware that manages identity tracking and touchpoint creation.
+
+    This middleware handles the attribution lifecycle on each request:
+    - Retrieves or creates visitor identities based on tracking cookies
+    - Resolves identity conflicts when anonymous users authenticate
+    - Records touchpoints when visitors arrive with tracking parameters
+    - Manages identity merging and reconciliation for authenticated users
+    - Sets and maintains attribution tracking cookies
+
+    Must be placed after TrackingParameterMiddleware in MIDDLEWARE setting.
+    """
+
     def __init__(self, get_response):
         self.get_response = get_response
         self.tracker = CookieIdentityTracker()
