@@ -162,13 +162,14 @@ class AttributionMiddleware:
         tracking_params = request.META.get("tracking_params", {})
         return bool(tracking_params)
 
-    def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
-        has_tracking_params = bool(request.META.get("tracking_params", {}))
-        has_tracking_header = (
+    def _has_tracking_header(self, request: AttributionHttpRequest) -> bool:
+        return (
             request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
             == attribution_settings.ATTRIBUTION_TRIGGER_VALUE
         )
-        return has_tracking_params or has_tracking_header
+
+    def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
+        return self._has_tracking_data(request) or self._has_tracking_header(request)
 
     def _should_resolve_identity(
         self,

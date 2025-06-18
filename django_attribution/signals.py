@@ -10,10 +10,6 @@ logger = logging.getLogger(__name__)
 
 @receiver(user_logged_in)
 def handle_attribution_on_login(sender, request, user, **kwargs):
-    tracking_params = request.META.get("tracking_params", {})
-    if not tracking_params:
-        return
-
     try:
         logger.info(f"Handling attribution reconciliation for user {user.id} login")
 
