@@ -105,7 +105,9 @@ class SingleTouchAttributionModel:
         return config
 
     def _get_attribution_fields(self) -> Dict[str, str]:
-        return {param: param for param in attribution_settings.TRACKING_PARAMETERS}
+        fields = {param: param for param in attribution_settings.TRACKING_PARAMETERS}
+        fields["referrer"] = "referrer"
+        return fields
 
 
 class LastTouchAttributionModel(SingleTouchAttributionModel):

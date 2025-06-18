@@ -63,6 +63,7 @@ class Identity(BaseModel):
         verbose_name_plural = "Identities"
         indexes = [
             models.Index(fields=["created_at"]),
+            models.Index(fields=["linked_user", "merged_into", "created_at"]),
         ]
         constraints = [
             models.UniqueConstraint(
@@ -102,14 +103,13 @@ class Touchpoint(BaseModel):
 
     url = models.URLField(max_length=2048)
     referrer = models.URLField(max_length=2048, blank=True)
-    # tracking_params
+
     utm_source = models.CharField(max_length=255, blank=True, db_index=True)
     utm_medium = models.CharField(max_length=255, blank=True, db_index=True)
     utm_campaign = models.CharField(max_length=255, blank=True, db_index=True)
     utm_term = models.CharField(max_length=255, blank=True)
     utm_content = models.CharField(max_length=255, blank=True)
 
-    # click tracking params
     fbclid = models.CharField(max_length=255, blank=True)
     gclid = models.CharField(max_length=255, blank=True)
     msclkid = models.CharField(max_length=255, blank=True)
@@ -124,6 +124,7 @@ class Touchpoint(BaseModel):
         indexes = [
             models.Index(fields=["identity", "created_at"]),
             models.Index(fields=["utm_source", "utm_medium"]),
+            models.Index(fields=["utm_campaign", "utm_source", "created_at"]),
         ]
         ordering = ["-created_at"]
 

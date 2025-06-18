@@ -357,6 +357,37 @@ def test_attribution_metadata_with_default_window(identity, now):
 
 
 @pytest.mark.django_db
+def test_attribution_includes_referrer_field(identity, now):
+    Touchpoint.objects.create(
+        identity=identity,
+        url="https://site.com/page1",
+        referrer="https://google.com/search?q=product",
+        utm_source="google",
+        utm_medium="cpc",
+        utm_campaign="campaign1",
+        created_at=now - timedelta(days=5),
+    )
+
+    conversion = Conversion.objects.create(
+        identity=identity, event="purchase", created_at=now
+    )
+
+    model = LastTouchAttributionModel()
+    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+
+    attributed_conversion = attributed_conversions.first()
+    assert attributed_conversion is not None
+
+    assert attributed_conversion.attribution_data.get("utm_source") == "google"
+    assert attributed_conversion.attribution_data.get("utm_medium") == "cpc"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign1"
+    assert (
+        attributed_conversion.attribution_data.get("referrer")
+        == "https://google.com/search?q=product"
+    )
+
+
+@pytest.mark.django_db
 def test_touchpoints_exactly_at_window_boundary(identity, now):
     Touchpoint.objects.create(
         identity=identity,
