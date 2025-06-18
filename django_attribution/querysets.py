@@ -68,7 +68,7 @@ class ConversionQuerySet(BaseQuerySet):
         if require_identity and (not current_identity):
             logger.warning(
                 f"Cannot record conversion '{event}': "
-                "no identity required but not found"
+                "identity required but not found"
             )
             return None
 
