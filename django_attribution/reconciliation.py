@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from django.contrib.auth.models import User
+from django.db import transaction
 
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
@@ -62,6 +63,7 @@ def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
     return user_canonical_identity
 
 
+@transaction.atomic
 def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
     if source == canonical:
         return
