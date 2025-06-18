@@ -9,6 +9,22 @@ __all__ = [
 
 
 def conversion_events(*events: str, require_identity: bool = True):
+    """
+    Decorator to restrict which conversion events can be recorded in a view.
+
+    Limits conversion recording to specified event types for the duration
+    of the decorated view function.
+
+    Args:
+        *events: Allowed conversion event names
+        require_identity: Whether identity is required for conversions
+
+    Usage:
+        @conversion_events('purchase', 'signup', require_identity=True)
+        def checkout_view(request):
+            record_conversion(request, 'purchase', value=99.99)
+    """
+
     allowed_events = set(events) if events else None
 
     def decorator(func):

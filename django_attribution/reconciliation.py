@@ -16,6 +16,25 @@ __all__ = ["reconcile_user_identity"]
 
 
 def reconcile_user_identity(request: AttributionHttpRequest) -> Identity:
+    """
+    Reconciles identity state when a user authenticates.
+
+    Handles the complex logic of merging anonymous browsing history with
+    authenticated user accounts. If the user has an existing canonical
+    identity, anonymous touchpoints and conversions are transferred to it.
+    If not, the current anonymous identity becomes the user's canonical
+    identity.
+
+    Args:
+        request: AttributionHttpRequest with authenticated user
+
+    Returns:
+        The canonical Identity for the authenticated user
+
+    Note:
+        Updates the identity tracker cookie to reference the canonical identity.
+    """
+
     canonical_identity = _resolve_user_identity(request)
     request.identity_tracker.set_identity(canonical_identity)
 
