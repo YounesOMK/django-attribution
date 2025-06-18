@@ -312,7 +312,7 @@ def test_attribution_metadata_annotation_last_touch(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 14,
-        "channel_windows": None,
+        "source_windows": None,
     }
 
 
@@ -333,7 +333,7 @@ def test_attribution_metadata_annotation_first_touch(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "FirstTouchAttributionModel",
         "window_days": 45,
-        "channel_windows": None,
+        "source_windows": None,
     }
 
 
@@ -352,7 +352,7 @@ def test_attribution_metadata_with_default_window(identity, now):
     assert attributed_conversion.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 30,
-        "channel_windows": None,
+        "source_windows": None,
     }
 
 
@@ -487,3 +487,141 @@ def test_convenience_instances_last_touch_and_first_touch(identity, now):
 
     assert isinstance(first_touch, FirstTouchAttributionModel)
     assert isinstance(last_touch, LastTouchAttributionModel)
+
+
+@pytest.mark.django_db
+def test_source_windows_custom_window_for_specific_source(identity, now):
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="google",
+        utm_campaign="search_campaign",
+        created_at=now - timedelta(days=15),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="facebook",
+        utm_campaign="social_campaign",
+        created_at=now - timedelta(days=25),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="facebook",
+        utm_campaign="old_campaign",
+        created_at=now - timedelta(days=45),
+    )
+
+    conversion = Conversion.objects.create(
+        identity=identity, event="purchase", created_at=now
+    )
+
+    source_windows = {"google": 20, "facebook": 40}
+
+    model = LastTouchAttributionModel()
+    attributed_conversions = model.apply(
+        Conversion.objects.filter(id=conversion.id),
+        window_days=30,
+        source_windows=source_windows,
+    )
+
+    attributed_conversion = attributed_conversions.first()
+    assert attributed_conversion is not None
+
+    assert attributed_conversion.attribution_data.get("utm_source") == "google"
+    assert (
+        attributed_conversion.attribution_data.get("utm_campaign") == "search_campaign"
+    )
+
+
+@pytest.mark.django_db
+def test_source_windows_multiple_custom_windows_different_sources(identity, now):
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="google",
+        utm_campaign="search",
+        created_at=now - timedelta(days=8),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="facebook",
+        utm_campaign="social",
+        created_at=now - timedelta(days=18),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="email",
+        utm_campaign="newsletter",
+        created_at=now - timedelta(days=12),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="google",
+        utm_campaign="old_search",
+        created_at=now - timedelta(days=12),
+    )
+
+    conversion = Conversion.objects.create(
+        identity=identity, event="purchase", created_at=now
+    )
+
+    source_windows = {"google": 10, "facebook": 20, "email": 15}
+
+    model = LastTouchAttributionModel()
+    attributed_conversions = model.apply(
+        Conversion.objects.filter(id=conversion.id),
+        window_days=30,
+        source_windows=source_windows,
+    )
+
+    attributed_conversion = attributed_conversions.first()
+    assert attributed_conversion is not None
+
+    assert attributed_conversion.attribution_data.get("utm_source") == "google"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "search"
+
+
+@pytest.mark.django_db
+def test_source_windows_zero_window_excludes_source(identity, now):
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="google",
+        utm_campaign="search",
+        created_at=now - timedelta(days=5),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="facebook",
+        utm_campaign="social",
+        created_at=now - timedelta(days=10),
+    )
+
+    Touchpoint.objects.create(
+        identity=identity,
+        utm_source="email",
+        utm_campaign="newsletter",
+        created_at=now - timedelta(days=25),
+    )
+
+    conversion = Conversion.objects.create(
+        identity=identity, event="purchase", created_at=now
+    )
+
+    source_windows = {"google": 0, "facebook": 15}
+
+    model = LastTouchAttributionModel()
+    attributed_conversions = model.apply(
+        Conversion.objects.filter(id=conversion.id),
+        window_days=30,
+        source_windows=source_windows,
+    )
+
+    attributed_conversion = attributed_conversions.first()
+    assert attributed_conversion is not None
+
+    assert attributed_conversion.attribution_data.get("utm_source") == "facebook"
+    assert attributed_conversion.attribution_data.get("utm_campaign") == "social"

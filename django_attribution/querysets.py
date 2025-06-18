@@ -108,7 +108,7 @@ class ConversionQuerySet(BaseQuerySet):
         self,
         model=None,
         window_days=30,
-        channel_windows=None,
+        source_windows=None,
     ):
         from django_attribution.attribution_models import last_touch
 
@@ -118,5 +118,5 @@ class ConversionQuerySet(BaseQuerySet):
         return model.apply(
             self,
             window_days=window_days,
-            channel_windows=channel_windows,
+            source_windows=source_windows,
         )

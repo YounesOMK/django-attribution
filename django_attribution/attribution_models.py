@@ -33,11 +33,11 @@ class SingleTouchAttributionModel:
         self,
         conversions_qs: models.QuerySet,
         window_days: int = 30,
-        channel_windows: Optional[Dict[str, int]] = None,
+        source_windows: Optional[Dict[str, int]] = None,
     ) -> models.QuerySet:
         from django_attribution.models import Touchpoint
 
-        window_config = self._build_window_config(window_days, channel_windows)
+        window_config = self._build_window_config(window_days, source_windows)
 
         touchpoints = Touchpoint.objects.filter(
             identity=OuterRef("identity"),
@@ -62,7 +62,7 @@ class SingleTouchAttributionModel:
                 {
                     "model": self.__class__.__name__,
                     "window_days": window_days,
-                    "channel_windows": channel_windows,
+                    "source_windows": source_windows,
                 },
                 output_field=JSONField(),
             ),
@@ -95,12 +95,12 @@ class SingleTouchAttributionModel:
         return conditions
 
     def _build_window_config(
-        self, default_days: int, channel_windows: Optional[Dict[str, int]]
+        self, default_days: int, source_windows: Optional[Dict[str, int]]
     ) -> Dict[str, int]:
         config = {"default": default_days}
 
-        if channel_windows:
-            config.update(channel_windows)
+        if source_windows:
+            config.update(source_windows)
 
         return config
 
