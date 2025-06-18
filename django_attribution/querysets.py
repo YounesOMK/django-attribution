@@ -104,10 +104,19 @@ class ConversionQuerySet(BaseQuerySet):
         )
         return conversion
 
-    def with_attribution(self, model=None, window_days=30):
-        from django_attribution.attribution_models import LastTouchAttributionModel
+    def with_attribution(
+        self,
+        model=None,
+        window_days=30,
+        channel_windows=None,
+    ):
+        from django_attribution.attribution_models import last_touch
 
         if model is None:
-            model = LastTouchAttributionModel()
+            model = last_touch
 
-        return model.apply(self, window_days=window_days)
+        return model.apply(
+            self,
+            window_days=window_days,
+            channel_windows=channel_windows,
+        )
