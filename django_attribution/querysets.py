@@ -50,6 +50,29 @@ class ConversionQuerySet(BaseQuerySet):
         source_object=None,
         custom_data: Optional[dict] = None,
     ):
+        """
+        Records a conversion event for the current request's identity.
+
+        Creates a new Conversion instance with the specified event details.
+        Validates that the event type is allowed (if conversion_events decorator
+        or mixin was used) and that an identity exists when required.
+
+        Args:
+            request: AttributionHttpRequest containing the current identity
+            event: Conversion event name (e.g., 'purchase', 'signup')
+            value: Monetary value of the conversion
+            currency: Currency code (defaults to settings default)
+            is_confirmed: Whether the conversion is confirmed/valid
+            source_object: Related Django model instance
+            custom_data: Additional conversion metadata
+
+        Returns:
+            Created Conversion instance, or None if validation fails
+
+        Raises:
+            ValueError: If event is not in allowed_conversion_events list
+        """
+
         allowed_events = getattr(request, "_allowed_conversion_events", None)
         require_identity = getattr(request, "_require_identity_for_conversions", True)
         current_identity = request.identity

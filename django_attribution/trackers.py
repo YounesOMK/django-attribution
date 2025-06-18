@@ -16,6 +16,18 @@ __all__ = [
 
 
 class CookieIdentityTracker:
+    """
+    Manages attribution identity tracking via HTTP cookies.
+
+    Handles the storage and retrieval of identity references in browser
+    cookies, enabling visitor recognition across sessions. Manages cookie
+    lifecycle including creation, updates, and deletion while respecting
+    configured security settings.
+
+    The tracker queues cookie operations during request processing and
+    applies them to the HTTP response.
+    """
+
     def __init__(self):
         self._should_set_cookie = False
         self.cookie_name = attribution_settings.COOKIE_NAME

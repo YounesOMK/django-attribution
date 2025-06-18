@@ -12,6 +12,23 @@ __all__ = [
 
 
 class ConversionEventsMixin:
+    """
+    Mixin for Django views to control which conversion events can be recorded.
+
+    Restricts conversion recording to a predefined set of event types for
+    the duration of the view execution. Optionally allows conversions to be
+    recorded without requiring an identity (for anonymous conversions).
+
+    Attributes:
+        conversion_events: Set of allowed event names for this view
+        require_identity: Whether an identity is required for conversions
+
+    Usage:
+        class CheckoutView(ConversionEventsMixin, View):
+            conversion_events = ['purchase', 'add_to_cart']
+            require_identity = True
+    """
+
     conversion_events: Optional[Set[str]] = None
     require_identity: bool = True
 
