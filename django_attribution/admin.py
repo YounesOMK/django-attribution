@@ -56,7 +56,6 @@ class IsCanonicalFilter(admin.SimpleListFilter):
 @admin.register(Identity)
 class IdentityAdmin(admin.ModelAdmin):
     list_display = (
-        "ip_address",
         "linked_user",
         "created_at",
         "is_canonical",
@@ -71,7 +70,7 @@ class IdentityAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("uuid", "linked_user", "ip_address", "user_agent")},
+            {"fields": ("uuid", "linked_user", "user_agent")},
         ),
         (
             "Tracking",

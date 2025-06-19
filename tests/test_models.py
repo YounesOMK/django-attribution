@@ -6,7 +6,7 @@ from django_attribution.models import Conversion, Identity, Touchpoint
 
 @pytest.mark.django_db
 def test_identity_string_representation_anonymous():
-    identity = Identity.objects.create(ip_address="192.168.1.1")
+    identity = Identity.objects.create()
 
     expected_str = f"Identity {identity.uuid} (Anonymous)"
     assert str(identity) == expected_str

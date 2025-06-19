@@ -4,8 +4,6 @@ from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
 
-from django_attribution.utils import extract_client_ip
-
 from .conf import attribution_settings
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
@@ -132,7 +130,6 @@ class AttributionMiddleware:
     ) -> Identity:
         if not current_identity:
             new_identity = Identity.objects.create(
-                ip_address=extract_client_ip(request),
                 user_agent=request.META.get("HTTP_USER_AGENT", ""),
             )
             self.tracker.set_identity(new_identity)

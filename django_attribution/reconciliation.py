@@ -7,7 +7,6 @@ from django.db import transaction
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
 from django_attribution.types import AttributionHttpRequest
-from django_attribution.utils import extract_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -131,11 +130,9 @@ def _create_canonical_identity_for_user(
     request: AttributionHttpRequest,
 ) -> Identity:
     user_agent = request.META.get("HTTP_USER_AGENT", "")
-    ip_address = extract_client_ip(request)
 
     identity = Identity.objects.create(
         linked_user=user,
-        ip_address=ip_address,
         user_agent=user_agent,
     )
     logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
