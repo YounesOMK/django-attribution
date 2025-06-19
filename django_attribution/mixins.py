@@ -16,22 +16,18 @@ class ConversionEventsMixin:
     Mixin for Django views to control which conversion events can be recorded.
 
     Restricts conversion recording to a predefined set of event types for
-    the duration of the view execution. Optionally allows conversions to be
-    recorded without requiring an identity (for anonymous conversions).
+    the duration of the view execution.
 
     Attributes:
         conversion_events: Iterable of allowed event names for
         this view (list, tuple, set, etc.)
-        require_identity: Whether an identity is required for conversions
 
     Usage:
         class CheckoutView(ConversionEventsMixin, View):
             conversion_events = ['purchase', 'add_to_cart']
-            require_identity = True
     """
 
     conversion_events: Optional[Iterable[str]] = None
-    require_identity: bool = True
 
     def dispatch(
         self,
@@ -41,7 +37,6 @@ class ConversionEventsMixin:
     ) -> HttpResponse:
         if self.conversion_events is not None:
             request._allowed_conversion_events = set(self.conversion_events)
-            request._require_identity_for_conversions = self.require_identity
 
         try:
             response = super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
@@ -49,8 +44,6 @@ class ConversionEventsMixin:
             # Clean up
             if hasattr(request, "_allowed_conversion_events"):
                 delattr(request, "_allowed_conversion_events")
-            if hasattr(request, "_require_identity_for_conversions"):
-                delattr(request, "_require_identity_for_conversions")
 
         return response
 

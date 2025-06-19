@@ -81,11 +81,6 @@ class ConversionQuerySet(BaseQuerySet):
             "_allowed_conversion_events",
             None,
         )
-        require_identity = getattr(
-            django_request,
-            "_require_identity_for_conversions",
-            True,
-        )
         current_identity = django_request.identity
 
         if allowed_events is not None and event not in allowed_events:
@@ -98,13 +93,6 @@ class ConversionQuerySet(BaseQuerySet):
                 f"Conversion event '{event}' not allowed. "
                 f"Allowed events: {sorted(allowed_events)}"
             )
-
-        if require_identity and (not current_identity):
-            logger.warning(
-                f"Cannot record conversion '{event}': "
-                "identity required but not found"
-            )
-            return None
 
         conversion_data: Dict[str, Any] = {
             "identity": current_identity,
