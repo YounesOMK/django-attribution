@@ -70,7 +70,7 @@ class IdentityAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("uuid", "linked_user", "user_agent")},
+            {"fields": ("uuid", "linked_user", "first_visit_user_agent")},
         ),
         (
             "Tracking",
