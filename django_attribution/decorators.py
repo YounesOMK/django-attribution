@@ -30,17 +30,19 @@ def conversion_events(*events: str, require_identity: bool = True):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(request, *args, **kwargs):
-            request._allowed_conversion_events = allowed_events
-            request._require_identity_for_conversions = require_identity
+            django_request = getattr(request, "_request", request)
+
+            django_request._allowed_conversion_events = allowed_events
+            django_request._require_identity_for_conversions = require_identity
 
             try:
                 response = func(request, *args, **kwargs)
             finally:
                 # Clean up
-                if hasattr(request, "_allowed_conversion_events"):
-                    delattr(request, "_allowed_conversion_events")
-                if hasattr(request, "_require_identity_for_conversions"):
-                    delattr(request, "_require_identity_for_conversions")
+                if hasattr(django_request, "_allowed_conversion_events"):
+                    delattr(django_request, "_allowed_conversion_events")
+                if hasattr(django_request, "_require_identity_for_conversions"):
+                    delattr(django_request, "_require_identity_for_conversions")
 
             return response
 
