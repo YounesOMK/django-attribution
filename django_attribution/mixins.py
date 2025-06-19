@@ -1,4 +1,4 @@
-from typing import Optional, Set
+from typing import Iterable, Optional
 
 from django.http import HttpResponse
 
@@ -20,7 +20,8 @@ class ConversionEventsMixin:
     recorded without requiring an identity (for anonymous conversions).
 
     Attributes:
-        conversion_events: Set of allowed event names for this view
+        conversion_events: Iterable of allowed event names for
+        this view (list, tuple, set, etc.)
         require_identity: Whether an identity is required for conversions
 
     Usage:
@@ -29,7 +30,7 @@ class ConversionEventsMixin:
             require_identity = True
     """
 
-    conversion_events: Optional[Set[str]] = None
+    conversion_events: Optional[Iterable[str]] = None
     require_identity: bool = True
 
     def dispatch(
