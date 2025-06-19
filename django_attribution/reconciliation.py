@@ -20,7 +20,7 @@ def reconcile_user_identity(request: AttributionHttpRequest) -> Identity:
 
     Handles the logic of merging anonymous browsing history with
     authenticated user accounts. If the user has an existing canonical
-    identity, anonymous touchpoints and conversions are transferred to it.
+    identity, anonymous touchpoints and events are transferred to it.
     If not, the current anonymous identity becomes the user's canonical
     identity.
 
@@ -91,7 +91,7 @@ def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
         return
 
     source.touchpoints.update(identity=canonical)
-    source.conversions.update(identity=canonical)
+    source.events.update(identity=canonical)
 
     source.merged_into = canonical
     source.linked_user = canonical.linked_user

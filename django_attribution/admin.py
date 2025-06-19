@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Conversion, Identity, Touchpoint
+from .models import Event, Identity, Touchpoint
 
 
 class TouchpointInline(admin.TabularInline):
@@ -19,8 +19,8 @@ class TouchpointInline(admin.TabularInline):
     ordering = ("-created_at",)
 
 
-class ConversionInline(admin.TabularInline):
-    model = Conversion
+class EventInline(admin.TabularInline):
+    model = Event
     extra = 0
     readonly_fields = (
         "uuid",
@@ -28,8 +28,8 @@ class ConversionInline(admin.TabularInline):
     )
     fields = (
         "created_at",
-        "event",
-        "conversion_value",
+        "name",
+        "monetary_value",
         "currency",
     )
     ordering = ("-created_at",)
@@ -79,7 +79,7 @@ class IdentityAdmin(admin.ModelAdmin):
         ("Timestamps", {"fields": ("created_at",)}),
     )
 
-    inlines = [TouchpointInline, ConversionInline]
+    inlines = [TouchpointInline, EventInline]
     autocomplete_fields = ["linked_user"]
     date_hierarchy = "created_at"
     ordering = (
@@ -140,22 +140,22 @@ class TouchpointAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
-@admin.register(Conversion)
-class ConversionAdmin(admin.ModelAdmin):
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
     list_display = (
-        "event",
-        "conversion_value",
+        "name",
+        "monetary_value",
         "currency",
         "created_at",
         "is_confirmed",
     )
     list_filter = (
-        "event",
+        "name",
         "currency",
         "created_at",
     )
     search_fields = (
-        "event",
+        "name",
         "identity__uuid",
     )
     readonly_fields = (
@@ -172,14 +172,14 @@ class ConversionAdmin(admin.ModelAdmin):
                 "fields": (
                     "uuid",
                     "identity",
-                    "event",
+                    "name",
                     "created_at",
                     "updated_at",
                     "is_confirmed",
                 )
             },
         ),
-        ("Value", {"fields": ("conversion_value", "currency")}),
+        ("Value", {"fields": ("monetary_value", "currency")}),
         ("Source", {"fields": ("source_content_type", "source_object_id")}),
     )
 

@@ -1,27 +1,27 @@
-from .models import Conversion
+from .models import Event
 from .types import AttributionHttpRequest
 
 __all__ = [
-    "record_conversion",
+    "record_event",
 ]
 
 
-def record_conversion(request: AttributionHttpRequest, event_type: str, **kwargs):
+def record_event(request: AttributionHttpRequest, name: str, **kwargs):
     """
-    Shortcut for Conversion.objects.record() that creates a conversion
+    Shortcut for Event.objects.record() that creates a event
     for the current request's identity. All keyword arguments are passed
-    through to the ConversionQuerySet.record method.
+    through to the EventQuerySet.record method.
 
     Args:
         request: AttributionHttpRequest containing the current identity
-        event_type: Name of the conversion event to record
+        name: Name of the event to record
         **kwargs: Additional arguments (value, currency, custom_data, etc.)
 
     Returns:
-        Created Conversion instance, or None if validation fails
+        Created Event instance, or None if validation fails
 
     Example:
-        record_conversion(request, 'purchase', value=99.99, currency='USD')
+        record_event(request, 'purchase', value=99.99, currency='USD')
     """
 
-    return Conversion.objects.record(request, event_type, **kwargs)
+    return Event.objects.record(request, name, **kwargs)

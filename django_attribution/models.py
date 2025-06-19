@@ -7,7 +7,7 @@ from django.db import models
 from django.utils import timezone
 
 from .querysets import (
-    ConversionQuerySet,
+    EventQuerySet,
     IdentityQuerySet,
     TouchpointQuerySet,
 )
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "Identity",
     "Touchpoint",
-    "Conversion",
+    "Event",
 ]
 
 
@@ -45,7 +45,7 @@ class Identity(BaseModel):
     (UTM codes, click IDs) or attribution triggers. It can be anonymous
     (browser/device-based) or authenticated (linked to a User account).
     Identities can be merged when an anonymous visitor logs in, consolidating
-    their touchpoint and conversion history under a single canonical identity.
+    their touchpoint and event history under a single canonical identity.
 
     Attributes:
         merged_into: Reference to canonical identity if this one was merged
@@ -113,7 +113,7 @@ class Touchpoint(BaseModel):
     A Touchpoint captures the marketing context (UTM parameters, click IDs)
     and visit details (URL, referrer) for each visit that contains
     tracking parameters. These touchpoints form the attribution trail that gets
-    analyzed when determining which marketing efforts led to conversions.
+    analyzed when determining which marketing efforts led to events.
 
     Attributes:
         identity: The Identity this touchpoint belongs to
@@ -166,37 +166,37 @@ class Touchpoint(BaseModel):
         return f"{self.utm_source or 'direct'} ({self.created_at})"
 
 
-class Conversion(BaseModel):
+class Event(BaseModel):
     """
-    Records a conversion event that can be attributed to marketing touchpoints.
+    Records an event that can be attributed to marketing touchpoints.
 
-    A Conversion represents a valuable action taken by a visitor, such as a
-    purchase, signup, or subscription. Conversions are linked to identities
+    A Event represents a valuable action taken by a visitor, such as a
+    purchase, signup, or subscription. Events are linked to identities
     and can later be attributed to specific marketing touchpoints using
     attribution models to understand which campaigns drove the most value.
 
     Attributes:
-        identity: The Identity that performed this conversion
-        event: Type of conversion (e.g., 'purchase', 'signup', 'trial')
-        conversion_value: Monetary value of this conversion
-        currency: Currency code for the conversion value
-        custom_data: Additional conversion metadata as JSON
+        identity: The Identity that performed this event
+        name: Type of event (e.g., 'purchase', 'signup', 'trial')
+        monetary_value: Monetary value of this event
+        currency: Currency code for the event value
+        custom_data: Additional event metadata as JSON
         source_content_type: Django content type of related object
         source_object_id: ID of related object (e.g., Order, Subscription)
         source_object: Generic foreign key to related object
-        is_confirmed: Whether this conversion is confirmed/valid
+        is_confirmed: Whether this event is confirmed/valid
     """
 
     identity = models.ForeignKey(
         Identity,
         on_delete=models.SET_NULL,
-        related_name="conversions",
+        related_name="events",
         null=True,
         blank=True,
     )
 
-    event = models.CharField(max_length=255, db_index=True)
-    conversion_value = models.DecimalField(
+    name = models.CharField(max_length=255, db_index=True)
+    monetary_value = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
     )
     currency = models.CharField(max_length=3, default=get_default_currency, blank=True)
@@ -206,7 +206,7 @@ class Conversion(BaseModel):
     source_content_type = models.ForeignKey(
         ContentType,
         on_delete=models.SET_NULL,
-        related_name="conversions_as_source_object",
+        related_name="events_as_source_object",
         null=True,
         blank=True,
     )
@@ -214,19 +214,19 @@ class Conversion(BaseModel):
     source_object = GenericForeignKey("source_content_type", "source_object_id")
 
     is_confirmed = models.BooleanField(default=True)
-    objects = models.Manager.from_queryset(ConversionQuerySet)()
+    objects = models.Manager.from_queryset(EventQuerySet)()
 
     class Meta:
         indexes = [
             models.Index(fields=["identity", "created_at"]),
-            models.Index(fields=["event", "created_at"]),
+            models.Index(fields=["name", "created_at"]),
             models.Index(fields=["source_content_type", "source_object_id"]),
         ]
         ordering = ["-created_at"]
 
     def __str__(self):
-        if self.conversion_value is not None:
-            value_str = f" ({self.currency} {self.conversion_value:.2f})"
+        if self.monetary_value is not None:
+            value_str = f" ({self.currency} {self.monetary_value:.2f})"
         else:
             value_str = ""
-        return f"{self.event}{value_str} - {self.created_at}"
+        return f"{self.name}{value_str} - {self.created_at}"

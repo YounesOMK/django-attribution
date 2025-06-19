@@ -9,7 +9,7 @@ from django_attribution.middlewares import (
     AttributionMiddleware,
     TrackingParameterMiddleware,
 )
-from django_attribution.models import Conversion, Identity, Touchpoint
+from django_attribution.models import Event, Identity, Touchpoint
 
 
 @pytest.fixture(autouse=True)
@@ -17,14 +17,14 @@ def clean_database(db):
     # Clean up attribution-specific models
     Touchpoint.objects.all().delete()
     Identity.objects.all().delete()
-    Conversion.objects.all().delete()
+    Event.objects.all().delete()
 
     yield  # Run the test
 
     # Optional: cleanup after test as well
     Touchpoint.objects.all().delete()
     Identity.objects.all().delete()
-    Conversion.objects.all().delete()
+    Event.objects.all().delete()
 
 
 @pytest.fixture

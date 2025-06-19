@@ -15,4 +15,4 @@ if TYPE_CHECKING:
 class AttributionHttpRequest(HttpRequest):
     identity_tracker: "CookieIdentityTracker"
     identity: Optional["Identity"]
-    _allowed_conversion_events: Optional[Set[str]]
+    _allowed_events: Optional[Set[str]]

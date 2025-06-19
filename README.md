@@ -1,6 +1,6 @@
 # django-attribution
 
-Track UTM parameters and link them to conversion events in Django.
+Track UTM parameters and link them to events in Django.
 
 ## Installation
 

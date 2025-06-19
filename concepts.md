@@ -1,27 +1,31 @@
-django-attribution tracks which marketing campaigns drive conversions. When someone visits your site from a campaign link, you capture where they came from. Later, when they convert, you can see which campaign deserves credit.
+django-attribution tracks which marketing campaigns drive events. When someone visits your site from a campaign link, you capture where they came from. Later, when they perform an event, you can see which campaign deserves credit.
 
-## Identity
+## Core Concepts
 
-An identity represents a visitor. It can be anonymous (tracked by browser cookie) or linked to a user account. When an anonymous visitor logs in, their touchpoint history gets merged under their user identity.
+### Touchpoints
+Marketing interactions that get tracked - visits from campaign links, ads, emails, etc. Each touchpoint captures UTM parameters, click IDs, and visit details that get analyzed when attributing events.
 
-## Touchpoints
+## Events
 
-Touchpoints record each marketing interaction. They capture UTM parameters, click IDs, and visit details. These form the trail that gets analyzed when attributing conversions.
+Events are valuable actions - purchases, signups, trials. They're linked to identities and can be attributed back to touchpoints using attribution models.
 
-## Conversions
+### Attribution Models
+Models determine which touchpoint gets credit for an event:
 
-Conversions are valuable actions - purchases, signups, trials. They're linked to identities and can be attributed back to touchpoints using attribution models.
-
-## Attribution Models
-
-Models determine which touchpoint gets credit for a conversion:
-
-- **Last-touch**: Credits the final interaction before conversion
+- **Last-touch**: Credits the final interaction before event
 - **First-touch**: Credits the initial interaction that started the journey
 
-## Attribution Windows
+### Attribution Windows
+Time limits for considering touchpoints. A 30-day window means only touchpoints from the last 30 days are considered when attributing an event.
 
-Time limits for considering touchpoints. A 30-day window means only touchpoints from the last 30 days are considered when attributing a conversion.
+### Identities
+Visitor identities that link touchpoints and events together. Can be anonymous (browser-based) or authenticated (linked to Django User accounts).
+
+### Identity Merging
+When an anonymous visitor logs in, their touchpoint and event history gets merged under their authenticated identity, creating a complete customer journey.
+
+### Event Confirmation
+Events can be marked as unconfirmed (like pending payments) and updated to confirmed after verification. Only confirmed events should be used in analytics.
 
 ## UTM Parameters
 
@@ -40,7 +44,3 @@ Platform-specific tracking IDs:
 - msclkid (Microsoft)
 - ttclid (TikTok)
 - li_fat_id (LinkedIn)
-
-## Confirmed vs Unconfirmed
-
-Conversions can be marked as unconfirmed (like pending payments) and updated to confirmed after verification. Only confirmed conversions should be used in analytics.

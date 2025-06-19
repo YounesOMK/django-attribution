@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth.models import AnonymousUser
 
 from django_attribution.conf import attribution_settings
-from django_attribution.models import Conversion, Identity, Touchpoint
+from django_attribution.models import Event, Identity, Touchpoint
 
 
 @pytest.mark.django_db
@@ -475,7 +475,7 @@ def test_user_with_multiple_identities_consolidates_to_canonical_identity(
 
 
 @pytest.mark.django_db
-def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge(
+def test_touchpoints_and_events_transfer_to_canonical_identity_during_merge(
     attribution_middleware,
     tracking_parameter_middleware,
     make_request,
@@ -490,9 +490,7 @@ def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge
         utm_campaign="newsletter",
     )
 
-    Conversion.objects.create(
-        identity=canonical_identity, event="signup", conversion_value=0
-    )
+    Event.objects.create(identity=canonical_identity, name="signup", monetary_value=0)
 
     anonymous_identity = Identity.objects.create(linked_user=None)
 
@@ -509,8 +507,8 @@ def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge
         utm_campaign="social_promo",
     )
 
-    Conversion.objects.create(
-        identity=anonymous_identity, event="purchase", conversion_value=99.99
+    Event.objects.create(
+        identity=anonymous_identity, name="purchase", monetary_value=99.99
     )
 
     request = make_request("/dashboard/")
@@ -534,22 +532,18 @@ def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge
         canonical_identity.touchpoints.filter(utm_source="facebook").count() == 2
     )  # Transferred
 
-    assert canonical_identity.conversions.count() == 2
-    assert canonical_identity.conversions.filter(event="signup").exists()  # Original
-    assert canonical_identity.conversions.filter(
-        event="purchase"
-    ).exists()  # Transferred
+    assert canonical_identity.events.count() == 2
+    assert canonical_identity.events.filter(name="signup").exists()  # Original
+    assert canonical_identity.events.filter(name="purchase").exists()  # Transferred
 
     anonymous_identity.refresh_from_db()
     assert anonymous_identity.touchpoints.count() == 0
-    assert anonymous_identity.conversions.count() == 0
+    assert anonymous_identity.events.count() == 0
     assert anonymous_identity.is_merged() is True
 
-    purchase_conversion = canonical_identity.conversions.filter(
-        event="purchase"
-    ).first()
-    assert purchase_conversion is not None
-    assert float(purchase_conversion.conversion_value) == 99.99
+    purchase_event = canonical_identity.events.filter(name="purchase").first()
+    assert purchase_event is not None
+    assert float(purchase_event.monetary_value) == 99.99
 
     facebook_touchpoints = canonical_identity.touchpoints.filter(utm_source="facebook")
     assert facebook_touchpoints.count() == 2

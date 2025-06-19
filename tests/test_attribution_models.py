@@ -9,7 +9,7 @@ from django_attribution.attribution_models import (
     first_touch,
     last_touch,
 )
-from django_attribution.models import Conversion, Touchpoint
+from django_attribution.models import Event, Touchpoint
 
 
 @pytest.fixture
@@ -46,23 +46,21 @@ def test_last_touch_attribution_with_touchpoints_in_window(identity, now):
         created_at=now - timedelta(days=5),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "email"
-    assert attributed_conversion.attribution_data.get("utm_medium") == "newsletter"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign3"
+    assert attributed_event.attribution_data.get("utm_source") == "email"
+    assert attributed_event.attribution_data.get("utm_medium") == "newsletter"
+    assert attributed_event.attribution_data.get("utm_campaign") == "campaign3"
 
 
 @pytest.mark.django_db
-def test_last_touch_attribution_with_multiple_conversions(identity, now):
+def test_last_touch_attribution_with_multiple_events(identity, now):
     Touchpoint.objects.create(
         identity=identity,
         utm_source="google",
@@ -77,18 +75,16 @@ def test_last_touch_attribution_with_multiple_conversions(identity, now):
         created_at=now - timedelta(days=5),
     )
 
-    Conversion.objects.create(
-        identity=identity, event="signup", created_at=now - timedelta(days=10)
+    Event.objects.create(
+        identity=identity, name="signup", created_at=now - timedelta(days=10)
     )
 
-    Conversion.objects.create(identity=identity, event="purchase", created_at=now)
+    Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.all()).order_by(
-        "created_at"
-    )
+    attributed_events = model.apply(Event.objects.all()).order_by("created_at")
 
-    conv1, conv2 = list(attributed_conversions)
+    conv1, conv2 = list(attributed_events)
 
     assert conv1.attribution_data.get("utm_source") == "google"
     assert conv1.attribution_data.get("utm_campaign") == "search"
@@ -123,19 +119,17 @@ def test_first_touch_attribution_with_touchpoints_in_window(identity, now):
         created_at=now - timedelta(days=5),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = FirstTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "google"
-    assert attributed_conversion.attribution_data.get("utm_medium") == "cpc"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign1"
+    assert attributed_event.attribution_data.get("utm_source") == "google"
+    assert attributed_event.attribution_data.get("utm_medium") == "cpc"
+    assert attributed_event.attribution_data.get("utm_campaign") == "campaign1"
 
 
 @pytest.mark.django_db
@@ -154,20 +148,14 @@ def test_first_touch_vs_last_touch_attribution_difference(identity, now):
         created_at=now - timedelta(days=5),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     first_touch = FirstTouchAttributionModel()
     last_touch = LastTouchAttributionModel()
 
-    first_touch_result = first_touch.apply(
-        Conversion.objects.filter(id=conversion.id)
-    ).first()
+    first_touch_result = first_touch.apply(Event.objects.filter(id=event.id)).first()
     assert first_touch_result is not None
-    last_touch_result = last_touch.apply(
-        Conversion.objects.filter(id=conversion.id)
-    ).first()
+    last_touch_result = last_touch.apply(Event.objects.filter(id=event.id)).first()
     assert last_touch_result is not None
 
     assert first_touch_result.attribution_data.get("utm_source") == "google"
@@ -186,36 +174,32 @@ def test_attribution_with_no_touchpoints_in_window_returns_empty(identity, now):
         created_at=now - timedelta(days=40),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") is None
-    assert attributed_conversion.attribution_data.get("utm_medium") is None
-    assert attributed_conversion.attribution_data.get("utm_campaign") is None
+    assert attributed_event.attribution_data.get("utm_source") is None
+    assert attributed_event.attribution_data.get("utm_medium") is None
+    assert attributed_event.attribution_data.get("utm_campaign") is None
 
 
 @pytest.mark.django_db
 def test_attribution_with_no_touchpoints_at_all_returns_empty(identity, now):
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") is None
-    assert attributed_conversion.attribution_data.get("utm_medium") is None
-    assert attributed_conversion.attribution_data.get("utm_campaign") is None
+    assert attributed_event.attribution_data.get("utm_source") is None
+    assert attributed_event.attribution_data.get("utm_medium") is None
+    assert attributed_event.attribution_data.get("utm_campaign") is None
 
 
 @pytest.mark.django_db
@@ -234,20 +218,16 @@ def test_attribution_with_custom_window_days_parameter(identity, now):
         created_at=now - timedelta(days=10),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=7
-    )
+    attributed_events = model.apply(Event.objects.filter(id=event.id), window_days=7)
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "google"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "within_7_days"
+    assert attributed_event.attribution_data.get("utm_source") == "google"
+    assert attributed_event.attribution_data.get("utm_campaign") == "within_7_days"
 
 
 @pytest.mark.django_db
@@ -264,32 +244,26 @@ def test_attribution_with_different_window_sizes(identity, now):
         identity=identity, utm_source="old", created_at=now - timedelta(days=45)
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
 
-    result_1day = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=1
-    ).first()
+    result_1day = model.apply(Event.objects.filter(id=event.id), window_days=1).first()
     assert result_1day is not None
     assert result_1day.attribution_data.get("utm_source") is None
 
-    result_7day = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=7
-    ).first()
+    result_7day = model.apply(Event.objects.filter(id=event.id), window_days=7).first()
     assert result_7day is not None
     assert result_7day.attribution_data.get("utm_source") == "recent"
 
     result_30day = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=30
+        Event.objects.filter(id=event.id), window_days=30
     ).first()
     assert result_30day is not None
     assert result_30day.attribution_data.get("utm_source") == "recent"
 
     result_60day = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=60
+        Event.objects.filter(id=event.id), window_days=60
     ).first()
     assert result_60day is not None
     assert result_60day.attribution_data.get("utm_source") == "recent"
@@ -297,19 +271,15 @@ def test_attribution_with_different_window_sizes(identity, now):
 
 @pytest.mark.django_db
 def test_attribution_metadata_annotation_last_touch(identity, now):
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=14
-    )
+    attributed_events = model.apply(Event.objects.filter(id=event.id), window_days=14)
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_metadata == {
+    assert attributed_event.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 14,
         "source_windows": None,
@@ -318,19 +288,15 @@ def test_attribution_metadata_annotation_last_touch(identity, now):
 
 @pytest.mark.django_db
 def test_attribution_metadata_annotation_first_touch(identity, now):
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = FirstTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=45
-    )
+    attributed_events = model.apply(Event.objects.filter(id=event.id), window_days=45)
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_metadata == {
+    assert attributed_event.attribution_metadata == {
         "model": "FirstTouchAttributionModel",
         "window_days": 45,
         "source_windows": None,
@@ -339,17 +305,15 @@ def test_attribution_metadata_annotation_first_touch(identity, now):
 
 @pytest.mark.django_db
 def test_attribution_metadata_with_default_window(identity, now):
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_metadata == {
+    assert attributed_event.attribution_metadata == {
         "model": "LastTouchAttributionModel",
         "window_days": 30,
         "source_windows": None,
@@ -368,21 +332,19 @@ def test_attribution_includes_referrer_field(identity, now):
         created_at=now - timedelta(days=5),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(Conversion.objects.filter(id=conversion.id))
+    attributed_events = model.apply(Event.objects.filter(id=event.id))
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "google"
-    assert attributed_conversion.attribution_data.get("utm_medium") == "cpc"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "campaign1"
+    assert attributed_event.attribution_data.get("utm_source") == "google"
+    assert attributed_event.attribution_data.get("utm_medium") == "cpc"
+    assert attributed_event.attribution_data.get("utm_campaign") == "campaign1"
     assert (
-        attributed_conversion.attribution_data.get("referrer")
+        attributed_event.attribution_data.get("referrer")
         == "https://google.com/search?q=product"
     )
 
@@ -410,20 +372,16 @@ def test_touchpoints_exactly_at_window_boundary(identity, now):
         created_at=now - timedelta(days=29, hours=23, minutes=59),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=30
-    )
+    attributed_events = model.apply(Event.objects.filter(id=event.id), window_days=30)
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "inside"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "just_inside"
+    assert attributed_event.attribution_data.get("utm_source") == "inside"
+    assert attributed_event.attribution_data.get("utm_campaign") == "just_inside"
 
 
 @pytest.mark.django_db
@@ -446,19 +404,15 @@ def test_window_boundary_with_first_touch_attribution(identity, now):
         created_at=now - timedelta(days=29),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     model = FirstTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id), window_days=30
-    )
+    attributed_events = model.apply(Event.objects.filter(id=event.id), window_days=30)
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "boundary"
+    assert attributed_event.attribution_data.get("utm_source") == "boundary"
 
 
 @pytest.mark.django_db
@@ -471,15 +425,13 @@ def test_convenience_instances_last_touch_and_first_touch(identity, now):
         identity=identity, utm_source="last", created_at=now - timedelta(days=5)
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
-    conversions_qs = Conversion.objects.filter(id=conversion.id)
+    events_qs = Event.objects.filter(id=event.id)
 
-    first_touch_result = first_touch.apply(conversions_qs).first()
+    first_touch_result = first_touch.apply(events_qs).first()
     assert first_touch_result is not None
-    last_touch_result = last_touch.apply(conversions_qs).first()
+    last_touch_result = last_touch.apply(events_qs).first()
     assert last_touch_result is not None
 
     assert first_touch_result.attribution_data.get("utm_source") == "first"
@@ -512,26 +464,22 @@ def test_source_windows_custom_window_for_specific_source(identity, now):
         created_at=now - timedelta(days=45),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     source_windows = {"google": 20, "facebook": 40}
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id),
+    attributed_events = model.apply(
+        Event.objects.filter(id=event.id),
         window_days=30,
         source_windows=source_windows,
     )
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "google"
-    assert (
-        attributed_conversion.attribution_data.get("utm_campaign") == "search_campaign"
-    )
+    assert attributed_event.attribution_data.get("utm_source") == "google"
+    assert attributed_event.attribution_data.get("utm_campaign") == "search_campaign"
 
 
 @pytest.mark.django_db
@@ -564,24 +512,22 @@ def test_source_windows_multiple_custom_windows_different_sources(identity, now)
         created_at=now - timedelta(days=12),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     source_windows = {"google": 10, "facebook": 20, "email": 15}
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id),
+    attributed_events = model.apply(
+        Event.objects.filter(id=event.id),
         window_days=30,
         source_windows=source_windows,
     )
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "google"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "search"
+    assert attributed_event.attribution_data.get("utm_source") == "google"
+    assert attributed_event.attribution_data.get("utm_campaign") == "search"
 
 
 @pytest.mark.django_db
@@ -607,21 +553,19 @@ def test_source_windows_zero_window_excludes_source(identity, now):
         created_at=now - timedelta(days=25),
     )
 
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", created_at=now
-    )
+    event = Event.objects.create(identity=identity, name="purchase", created_at=now)
 
     source_windows = {"google": 0, "facebook": 15}
 
     model = LastTouchAttributionModel()
-    attributed_conversions = model.apply(
-        Conversion.objects.filter(id=conversion.id),
+    attributed_events = model.apply(
+        Event.objects.filter(id=event.id),
         window_days=30,
         source_windows=source_windows,
     )
 
-    attributed_conversion = attributed_conversions.first()
-    assert attributed_conversion is not None
+    attributed_event = attributed_events.first()
+    assert attributed_event is not None
 
-    assert attributed_conversion.attribution_data.get("utm_source") == "facebook"
-    assert attributed_conversion.attribution_data.get("utm_campaign") == "social"
+    assert attributed_event.attribution_data.get("utm_source") == "facebook"
+    assert attributed_event.attribution_data.get("utm_campaign") == "social"

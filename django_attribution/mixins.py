@@ -6,28 +6,28 @@ from .conf import attribution_settings
 from .types import AttributionHttpRequest
 
 __all__ = [
-    "ConversionEventsMixin",
+    "EventsMixin",
     "RequestExclusionMixin",
 ]
 
 
-class ConversionEventsMixin:
+class EventsMixin:
     """
-    Mixin for Django views to control which conversion events can be recorded.
+    Mixin for Django views to control which events can be recorded.
 
-    Restricts conversion recording to a predefined set of event types for
+    Restricts event recording to a predefined set of event types for
     the duration of the view execution.
 
     Attributes:
-        conversion_events: Iterable of allowed event names for
+        events: Iterable of allowed event names for
         this view (list, tuple, set, etc.)
 
     Usage:
-        class CheckoutView(ConversionEventsMixin, View):
-            conversion_events = ['purchase', 'add_to_cart']
+        class CheckoutView(EventsMixin, View):
+            events = ['purchase', 'add_to_cart']
     """
 
-    conversion_events: Optional[Iterable[str]] = None
+    events: Optional[Iterable[str]] = None
 
     def dispatch(
         self,
@@ -35,15 +35,15 @@ class ConversionEventsMixin:
         *args,
         **kwargs,
     ) -> HttpResponse:
-        if self.conversion_events is not None:
-            request._allowed_conversion_events = set(self.conversion_events)
+        if self.events is not None:
+            request._allowed_events = set(self.events)
 
         try:
             response = super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
         finally:
             # Clean up
-            if hasattr(request, "_allowed_conversion_events"):
-                delattr(request, "_allowed_conversion_events")
+            if hasattr(request, "_allowed_events"):
+                delattr(request, "_allowed_events")
 
         return response
 

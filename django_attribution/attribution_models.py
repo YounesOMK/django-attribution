@@ -25,17 +25,16 @@ __all__ = [
 ]
 
 
-class SingleTouchAttributionModel:
+class BaseAttributionModel:
     """
-    Base class for single-touch attribution models.
+    Base class for attribution models that assign credit to marketing touchpoints.
 
-    Single-touch attribution assigns 100% of the conversion credit to one
-    touchpoint in the customer journey. Subclasses implement different
-    strategies for choosing which touchpoint gets the credit (first-touch,
-    last-touch.) by overriding the prepare_touchpoints method.
+    Single-touch attribution assigns 100% of the event credit to one
+    touchpoint, while multi-touch models distribute credit across multiple
+    touchpoints in the customer journey.
 
-    The model applies attribution windows to limit which touchpoints are
-    considered, with support for different window lengths per traffic source.
+    Subclasses must implement the apply() method to define the specific
+    attribution logic.
     """
 
     def prepare_touchpoints(self, touchpoints_qs):
@@ -43,7 +42,7 @@ class SingleTouchAttributionModel:
 
     def apply(
         self,
-        conversions_qs: models.QuerySet,
+        events_qs: models.QuerySet,
         window_days: int = 30,
         source_windows: Optional[Dict[str, int]] = None,
     ) -> models.QuerySet:
@@ -68,7 +67,7 @@ class SingleTouchAttributionModel:
             Value({}, output_field=JSONField()),
         )
 
-        return conversions_qs.annotate(
+        return events_qs.annotate(
             attribution_data=attribution_data,
             attribution_metadata=Value(
                 {
@@ -122,13 +121,30 @@ class SingleTouchAttributionModel:
         return fields
 
 
+class SingleTouchAttributionModel(BaseAttributionModel):
+    """
+    Base class for single-touch attribution models.
+
+    Single-touch attribution assigns 100% of the event credit to one
+    touchpoint in the customer journey. Subclasses implement different
+    strategies for choosing which touchpoint gets the credit (first-touch,
+    last-touch.) by overriding the prepare_touchpoints method.
+
+    The model applies attribution windows to limit which touchpoints are
+    considered, with support for different window lengths per traffic source.
+    """
+
+    def prepare_touchpoints(self, touchpoints_qs):
+        raise NotImplementedError
+
+
 class LastTouchAttributionModel(SingleTouchAttributionModel):
     """
-    Attribution model that credits the most recent touchpoint before conversion.
+    Attribution model that credits the most recent touchpoint before event.
 
-    Assigns 100% of conversion credit to the last marketing touchpoint that
+    Assigns 100% of event credit to the last marketing touchpoint that
     occurred within the attribution window. This model emphasizes the final
-    interaction that directly preceded the conversion action.
+    interaction that directly preceded the event action.
     """
 
     def prepare_touchpoints(self, touchpoints_qs):
@@ -137,11 +153,11 @@ class LastTouchAttributionModel(SingleTouchAttributionModel):
 
 class FirstTouchAttributionModel(SingleTouchAttributionModel):
     """
-    Attribution model that credits the earliest touchpoint before conversion.
+    Attribution model that credits the earliest touchpoint before event.
 
-    Assigns 100% of conversion credit to the first marketing touchpoint that
+    Assigns 100% of event credit to the first marketing touchpoint that
     occurred within the attribution window. This model emphasizes the initial
-    interaction that started the customer journey leading to conversion.
+    interaction that started the customer journey leading to event.
     """
 
     def prepare_touchpoints(self, touchpoints_qs):

@@ -28,7 +28,7 @@ class TouchpointQuerySet(BaseQuerySet):
     pass
 
 
-class ConversionQuerySet(BaseQuerySet):
+class EventQuerySet(BaseQuerySet):
     def confirmed(self):
         return self.filter(is_confirmed=True)
 
@@ -44,87 +44,87 @@ class ConversionQuerySet(BaseQuerySet):
     def record(
         self,
         request,
-        event: str,
-        value: Optional[float] = None,
+        name: str,
+        monetary_value: Optional[float] = None,
         currency: Optional[str] = None,
         is_confirmed: bool = True,
         source_object=None,
         custom_data: Optional[dict] = None,
     ):
         """
-        Records a conversion event for the current request's identity.
+        Records an event for the current request's identity.
 
-        Creates a new Conversion instance with the specified event details.
-        Validates that the event type is allowed (if conversion_events decorator
+        Creates a new Event instance with the specified event details.
+        Validates that the event type is allowed (if events decorator
         or mixin was used) and that an identity exists when required.
 
         Args:
             request: Request containing the current identity
-            event: Conversion event name (e.g., 'purchase', 'signup')
-            value: Monetary value of the conversion
+            name: Event name (e.g., 'purchase', 'signup')
+            monetary_value: Monetary value of the event
             currency: Currency code (defaults to settings default)
-            is_confirmed: Whether the conversion is confirmed/valid
+            is_confirmed: Whether the event is confirmed/valid
             source_object: Related Django model instance
-            custom_data: Additional conversion metadata
+            custom_data: Additional event metadata
 
         Returns:
-            Created Conversion instance, or None if validation fails
+            Created Event instance, or None if validation fails
 
         Raises:
-            ValueError: If event is not in allowed_conversion_events list
+            ValueError: If event is not in allowed_events list
         """
 
         django_request = getattr(request, "_request", request)
 
         allowed_events = getattr(
             django_request,
-            "_allowed_conversion_events",
+            "_allowed_events",
             None,
         )
         current_identity = django_request.identity
 
-        if allowed_events is not None and event not in allowed_events:
+        if allowed_events is not None and name not in allowed_events:
             logger.warning(
-                f"Attempted to record conversion '{event}' "
+                f"Attempted to record event '{name}' "
                 f"not declared in allowed events. "
                 f"Allowed: {allowed_events}"
             )
             raise ValueError(
-                f"Conversion event '{event}' not allowed. "
+                f"Event '{name}' not allowed. "
                 f"Allowed events: {sorted(allowed_events)}"
             )
 
-        conversion_data: Dict[str, Any] = {
+        event_data: Dict[str, Any] = {
             "identity": current_identity,
-            "event": event,
+            "name": name,
             "is_confirmed": is_confirmed,
         }
 
-        if value is not None:
-            conversion_data["conversion_value"] = value
+        if monetary_value is not None:
+            event_data["monetary_value"] = monetary_value
 
         if currency is not None:
-            conversion_data["currency"] = currency
+            event_data["currency"] = currency
 
         if source_object is not None:
             from django.contrib.contenttypes.models import ContentType
 
-            conversion_data["source_content_type"] = ContentType.objects.get_for_model(
+            event_data["source_content_type"] = ContentType.objects.get_for_model(
                 source_object
             )
-            conversion_data["source_object_id"] = source_object.pk
+            event_data["source_object_id"] = source_object.pk
 
         if custom_data:
-            conversion_data["custom_data"] = custom_data
+            event_data["custom_data"] = custom_data
 
-        conversion = self.model(**conversion_data)
-        conversion.save()
+        event = self.model(**event_data)
+        event.save()
 
         logger.info(
-            f"Recorded conversion '{event}' "
+            f"Recorded event '{name}' "
             f"for identity {current_identity.uuid if current_identity else 'anonymous'}"
         )
-        return conversion
+        return event
 
     def with_attribution(
         self,

@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from django_attribution.models import Conversion, Identity, Touchpoint
+from django_attribution.models import Event, Identity, Touchpoint
 
 
 @pytest.mark.django_db
@@ -125,56 +125,56 @@ def test_touchpoint_default_ordering():
 
 
 @pytest.mark.django_db
-def test_conversion_string_representation_without_value():
+def test_event_string_representation_without_value():
     identity = Identity.objects.create()
-    conversion = Conversion.objects.create(identity=identity, event="signup")
+    event = Event.objects.create(identity=identity, name="signup")
 
-    expected_str = f"signup - {conversion.created_at}"
-    assert str(conversion) == expected_str
+    expected_str = f"signup - {event.created_at}"
+    assert str(event) == expected_str
 
 
 @pytest.mark.django_db
-def test_conversion_string_representation_with_value():
+def test_event_string_representation_with_value():
     identity = Identity.objects.create()
-    conversion = Conversion.objects.create(
-        identity=identity, event="purchase", conversion_value=99.99, currency="USD"
+    event = Event.objects.create(
+        identity=identity, name="purchase", monetary_value=99.99, currency="USD"
     )
 
-    expected_str = f"purchase (USD 99.99) - {conversion.created_at}"
-    assert str(conversion) == expected_str
+    expected_str = f"purchase (USD 99.99) - {event.created_at}"
+    assert str(event) == expected_str
 
 
 @pytest.mark.django_db
-def test_conversion_string_representation_with_zero_value():
+def test_event_string_representation_with_zero_value():
     identity = Identity.objects.create()
-    conversion = Conversion.objects.create(
-        identity=identity, event="free_trial", conversion_value=0.00, currency="EUR"
+    event = Event.objects.create(
+        identity=identity, name="free_trial", monetary_value=0.00, currency="EUR"
     )
 
-    expected_str = f"free_trial (EUR 0.00) - {conversion.created_at}"
-    assert str(conversion) == expected_str
+    expected_str = f"free_trial (EUR 0.00) - {event.created_at}"
+    assert str(event) == expected_str
 
 
 @pytest.mark.django_db
-def test_conversion_default_currency():
+def test_event_default_currency():
     identity = Identity.objects.create()
-    conversion = Conversion.objects.create(identity=identity, event="purchase")
+    event = Event.objects.create(identity=identity, name="purchase")
 
     # Should use the default currency from settings
-    assert conversion.currency == "EUR"
+    assert event.currency == "EUR"
 
 
 @pytest.mark.django_db
-def test_conversion_default_ordering():
+def test_event_default_ordering():
     identity = Identity.objects.create()
 
-    conversion1 = Conversion.objects.create(identity=identity, event="signup")
-    conversion2 = Conversion.objects.create(identity=identity, event="purchase")
-    conversion3 = Conversion.objects.create(identity=identity, event="renewal")
+    event1 = Event.objects.create(identity=identity, name="signup")
+    event2 = Event.objects.create(identity=identity, name="purchase")
+    event3 = Event.objects.create(identity=identity, name="renewal")
 
     # Should be ordered by newest first (most recent created_at first)
-    conversions = list(Conversion.objects.all())
+    events = list(Event.objects.all())
 
-    assert conversions[0] == conversion3  # Most recent
-    assert conversions[1] == conversion2
-    assert conversions[2] == conversion1  # Oldest
+    assert events[0] == event3  # Most recent
+    assert events[1] == event2
+    assert events[2] == event1  # Oldest
