@@ -110,7 +110,7 @@ def test_anonymous_user_with_existing_identity_logs_in_links_identity_to_account
     authenticated_user,
 ):
     existing_identity = Identity.objects.create(
-        user_agent="Mozilla/5.0...", linked_user=None
+        first_visit_user_agent="Mozilla/5.0...", linked_user=None
     )
 
     Touchpoint.objects.create(
@@ -200,7 +200,7 @@ def test_merge_identities_on_login_with_anonymous_identity(
 ):
     canonical_identity = Identity.objects.create(
         linked_user=authenticated_user,
-        user_agent="Previous Device",
+        first_visit_user_agent="Previous Device",
     )
 
     Touchpoint.objects.create(
@@ -212,7 +212,7 @@ def test_merge_identities_on_login_with_anonymous_identity(
 
     anonymous_identity = Identity.objects.create(
         linked_user=None,  # Anonymous
-        user_agent="New Device",
+        first_visit_user_agent="New Device",
     )
 
     Touchpoint.objects.create(
@@ -271,7 +271,7 @@ def test_returning_visitor_with_new_utm(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     existing_identity = Identity.objects.create(
-        user_agent="Mozilla/5.0...",
+        first_visit_user_agent="Mozilla/5.0...",
         linked_user=None,  # Anonymous
     )
 
@@ -329,7 +329,7 @@ def test_returning_visitor_with_valid_cookie_no_utm_reuses_identity_no_touchpoin
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     existing_identity = Identity.objects.create(
-        user_agent="Mozilla/5.0...",
+        first_visit_user_agent="Mozilla/5.0...",
         linked_user=None,  # Anonymous
     )
 
@@ -374,7 +374,9 @@ def test_returning_visitor_with_valid_cookie_no_utm_reuses_identity_no_touchpoin
 def test_returning_visitor_with_corrupted_cookie_creates_fresh_identity(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
-    old_identity = Identity.objects.create(user_agent="Old Browser", linked_user=None)
+    old_identity = Identity.objects.create(
+        first_visit_user_agent="Old Browser", linked_user=None
+    )
 
     request = make_request(
         "/special-offer/",
@@ -427,12 +429,12 @@ def test_user_with_multiple_identities_consolidates_to_canonical_identity(
 ):
     canonical_identity = Identity.objects.create(
         linked_user=authenticated_user,
-        user_agent="Previous Device",
+        first_visit_user_agent="Previous Device",
     )
 
     anonymous_identity = Identity.objects.create(
         linked_user=None,  # Anonymous browsing
-        user_agent="New Device",
+        first_visit_user_agent="New Device",
     )
 
     old_merged_identity = Identity.objects.create(
@@ -563,10 +565,12 @@ def test_cookie_updates_to_canonical_identity_uuid_after_reconciliation(
     authenticated_user,
 ):
     canonical_identity = Identity.objects.create(
-        linked_user=authenticated_user, user_agent="Desktop"
+        linked_user=authenticated_user, first_visit_user_agent="Desktop"
     )
 
-    anonymous_identity = Identity.objects.create(linked_user=None, user_agent="Mobile")
+    anonymous_identity = Identity.objects.create(
+        linked_user=None, first_visit_user_agent="Mobile"
+    )
 
     canonical_uuid = str(canonical_identity.uuid)
     anonymous_uuid = str(anonymous_identity.uuid)
@@ -604,7 +608,9 @@ def test_user_with_no_existing_canonical_identity_promotes_anonymous_to_canonica
     make_request,
     authenticated_user,
 ):
-    anonymous_identity = Identity.objects.create(linked_user=None, user_agent="Chrome")
+    anonymous_identity = Identity.objects.create(
+        linked_user=None, first_visit_user_agent="Chrome"
+    )
 
     Touchpoint.objects.create(
         identity=anonymous_identity,

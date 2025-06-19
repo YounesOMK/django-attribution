@@ -133,7 +133,7 @@ def _create_canonical_identity_for_user(
 
     identity = Identity.objects.create(
         linked_user=user,
-        user_agent=user_agent,
+        first_visit_user_agent=user_agent,
     )
     logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
     return identity

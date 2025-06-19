@@ -130,7 +130,7 @@ class AttributionMiddleware:
     ) -> Identity:
         if not current_identity:
             new_identity = Identity.objects.create(
-                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                first_visit_user_agent=request.META.get("HTTP_USER_AGENT", ""),
             )
             self.tracker.set_identity(new_identity)
             logger.info(f"Created new anonymous identity {new_identity.uuid}")
