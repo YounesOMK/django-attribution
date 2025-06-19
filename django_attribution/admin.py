@@ -80,6 +80,7 @@ class IdentityAdmin(admin.ModelAdmin):
     )
 
     inlines = [TouchpointInline, ConversionInline]
+    autocomplete_fields = ["linked_user"]
     date_hierarchy = "created_at"
     ordering = (
         "merged_into",
@@ -103,6 +104,7 @@ class TouchpointAdmin(admin.ModelAdmin):
     list_filter = ("utm_source", "utm_medium", "created_at")
     search_fields = ("url", "utm_source", "utm_campaign")
     readonly_fields = ("uuid", "created_at")
+    autocomplete_fields = ["identity"]
 
     fieldsets = (
         (None, {"fields": ("uuid", "identity", "created_at", "url", "referrer")}),
@@ -161,6 +163,7 @@ class ConversionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    autocomplete_fields = ["identity"]
 
     fieldsets = (
         (
