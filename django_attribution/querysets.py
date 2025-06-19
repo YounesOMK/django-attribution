@@ -3,8 +3,6 @@ from typing import Any, Dict, Optional
 
 from django.db import models
 
-from .types import AttributionHttpRequest
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +40,7 @@ class ConversionQuerySet(BaseQuerySet):
 
     def record(
         self,
-        request: AttributionHttpRequest,
+        request,
         event: str,
         value: Optional[float] = None,
         currency: Optional[str] = None,
@@ -58,7 +56,7 @@ class ConversionQuerySet(BaseQuerySet):
         or mixin was used) and that an identity exists when required.
 
         Args:
-            request: AttributionHttpRequest containing the current identity
+            request: Request containing the current identity
             event: Conversion event name (e.g., 'purchase', 'signup')
             value: Monetary value of the conversion
             currency: Currency code (defaults to settings default)
@@ -73,9 +71,19 @@ class ConversionQuerySet(BaseQuerySet):
             ValueError: If event is not in allowed_conversion_events list
         """
 
-        allowed_events = getattr(request, "_allowed_conversion_events", None)
-        require_identity = getattr(request, "_require_identity_for_conversions", True)
-        current_identity = request.identity
+        django_request = getattr(request, "_request", request)
+
+        allowed_events = getattr(
+            django_request,
+            "_allowed_conversion_events",
+            None,
+        )
+        require_identity = getattr(
+            django_request,
+            "_require_identity_for_conversions",
+            True,
+        )
+        current_identity = django_request.identity
 
         if allowed_events is not None and event not in allowed_events:
             logger.warning(
