@@ -38,6 +38,9 @@ class ConversionQuerySet(BaseQuerySet):
     def identified(self):
         return self.exclude(identity__isnull=True)
 
+    def valid(self):
+        return self.active().confirmed()
+
     def record(
         self,
         request,
