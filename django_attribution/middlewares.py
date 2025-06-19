@@ -107,7 +107,9 @@ class AttributionMiddleware:
         response = self.get_response(request)
 
         if request.identity:
-            if self._has_tracking_data(request):
+            if self._has_tracking_data(request) and self._is_successful_response(
+                response
+            ):
                 self._record_touchpoint(request.identity, request)
             self.tracker.apply_to_response(request, response)
 
@@ -184,6 +186,9 @@ class AttributionMiddleware:
     def _has_tracking_data(self, request: AttributionHttpRequest) -> bool:
         tracking_params = request.META.get("tracking_params", {})
         return bool(tracking_params)
+
+    def _is_successful_response(self, response: HttpResponse) -> bool:
+        return response.status_code >= 200 and response.status_code < 300
 
     def _has_tracking_header(self, request: AttributionHttpRequest) -> bool:
         return bool(request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER))
