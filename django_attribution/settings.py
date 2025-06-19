@@ -66,5 +66,4 @@ DEFAULTS = {
     "COOKIE_SAMESITE": "Lax",
     # Attribution Trigger Configuration
     "ATTRIBUTION_TRIGGER_HEADER": "HTTP_X_ATTRIBUTION_TRIGGER",
-    "ATTRIBUTION_TRIGGER_VALUE": "true",
 }

@@ -80,9 +80,7 @@ def test_new_anon_visitor_with_attribution_header_creates_identity_without_touch
     request = make_request("/api-endpoint/")
     request.user = AnonymousUser()
 
-    request.META[
-        attribution_settings.ATTRIBUTION_TRIGGER_HEADER
-    ] = attribution_settings.ATTRIBUTION_TRIGGER_VALUE
+    request.META[attribution_settings.ATTRIBUTION_TRIGGER_HEADER] = "any_value"
 
     tracking_parameter_middleware(request)
 

@@ -186,10 +186,7 @@ class AttributionMiddleware:
         return bool(tracking_params)
 
     def _has_tracking_header(self, request: AttributionHttpRequest) -> bool:
-        return (
-            request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER)
-            == attribution_settings.ATTRIBUTION_TRIGGER_VALUE
-        )
+        return bool(request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER))
 
     def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
         return self._has_tracking_data(request) or self._has_tracking_header(request)
