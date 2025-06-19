@@ -84,7 +84,7 @@ def anonymous_user():
 
 @pytest.fixture
 def identity():
-    return Identity.objects.create(ip_address="192.168.1.1")
+    return Identity.objects.create()
 
 
 @pytest.fixture

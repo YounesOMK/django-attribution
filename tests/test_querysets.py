@@ -13,7 +13,6 @@ def test_record_conversion_with_allowed_events_succeeds(request_with_identity):
         "purchase",
         "newsletter",
     }
-    request_with_identity._require_identity_for_conversions = True
 
     conversion = Conversion.objects.record(
         request_with_identity, "signup", value=0.0, currency="USD"
@@ -34,7 +33,6 @@ def test_record_conversion_with_allowed_events_multiple_events(request_with_iden
         "purchase",
         "newsletter",
     }
-    request_with_identity._require_identity_for_conversions = True
 
     signup_conversion = Conversion.objects.record(request_with_identity, "signup")
     purchase_conversion = Conversion.objects.record(
@@ -59,7 +57,6 @@ def test_record_conversion_with_disallowed_event_raises_value_error(
     request_with_identity,
 ):
     request_with_identity._allowed_conversion_events = {"signup", "purchase"}
-    request_with_identity._require_identity_for_conversions = True
 
     with pytest.raises(ValueError) as exc_info:
         Conversion.objects.record(request_with_identity, "newsletter")
@@ -72,7 +69,6 @@ def test_record_conversion_with_disallowed_event_raises_value_error(
 @pytest.mark.django_db
 def test_record_conversion_with_disallowed_event_logs_warning(request_with_identity):
     request_with_identity._allowed_conversion_events = {"signup", "purchase"}
-    request_with_identity._require_identity_for_conversions = True
 
     with patch("django_attribution.querysets.logger") as mock_logger:
         with pytest.raises(ValueError):
@@ -89,29 +85,11 @@ def test_record_conversion_without_identity_when_required_returns_none(
     request_without_identity,
 ):
     request_without_identity._allowed_conversion_events = {"signup"}
-    request_without_identity._require_identity_for_conversions = True
 
     result = Conversion.objects.record(request_without_identity, "signup")
 
-    assert result is None
-    assert Conversion.objects.count() == 0
-
-
-@pytest.mark.django_db
-def test_record_conversion_without_identity_when_required_logs_warning(
-    request_without_identity,
-):
-    request_without_identity._allowed_conversion_events = {"signup"}
-    request_without_identity._require_identity_for_conversions = True
-
-    with patch("django_attribution.querysets.logger") as mock_logger:
-        result = Conversion.objects.record(request_without_identity, "signup")
-
-        assert result is None
-        mock_logger.warning.assert_called_once()
-        call_args = mock_logger.warning.call_args[0][0]
-        assert "Cannot record conversion 'signup'" in call_args
-        assert "identity required but not found" in call_args
+    assert result is not None
+    assert Conversion.objects.count() == 1
 
 
 @pytest.mark.django_db
@@ -119,7 +97,6 @@ def test_record_conversion_without_identity_when_not_required_succeeds(
     request_without_identity,
 ):
     request_without_identity._allowed_conversion_events = {"signup"}
-    request_without_identity._require_identity_for_conversions = False
 
     conversion = Conversion.objects.record(request_without_identity, "signup")
 
@@ -132,7 +109,6 @@ def test_record_conversion_without_identity_when_not_required_succeeds(
 @pytest.mark.django_db
 def test_record_conversion_without_identity_logs_anonymous(request_without_identity):
     request_without_identity._allowed_conversion_events = {"signup"}
-    request_without_identity._require_identity_for_conversions = False
 
     with patch("django_attribution.querysets.logger") as mock_logger:
         conversion = Conversion.objects.record(request_without_identity, "signup")
@@ -149,7 +125,6 @@ def test_record_conversion_logs_successful_creation_with_identity(
     request_with_identity,
 ):
     request_with_identity._allowed_conversion_events = {"purchase"}
-    request_with_identity._require_identity_for_conversions = True
 
     with patch("django_attribution.querysets.logger") as mock_logger:
         conversion = Conversion.objects.record(request_with_identity, "purchase")
@@ -163,8 +138,6 @@ def test_record_conversion_logs_successful_creation_with_identity(
 
 @pytest.mark.django_db
 def test_record_conversion_without_allowed_events_constraint(request_with_identity):
-    request_with_identity._require_identity_for_conversions = True
-
     conversion = Conversion.objects.record(request_with_identity, "any_event_name")
 
     assert conversion is not None
@@ -175,7 +148,6 @@ def test_record_conversion_without_allowed_events_constraint(request_with_identi
 @pytest.mark.django_db
 def test_record_conversion_default_currency_when_not_specified(request_with_identity):
     request_with_identity._allowed_conversion_events = {"purchase"}
-    request_with_identity._require_identity_for_conversions = True
 
     conversion = Conversion.objects.record(
         request_with_identity, "purchase", value=50.00

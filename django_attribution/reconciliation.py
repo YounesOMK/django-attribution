@@ -7,7 +7,6 @@ from django.db import transaction
 from django_attribution.models import Identity
 from django_attribution.trackers import CookieIdentityTracker
 from django_attribution.types import AttributionHttpRequest
-from django_attribution.utils import extract_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ def reconcile_user_identity(request: AttributionHttpRequest) -> Identity:
     """
     Reconciles identity state when a user authenticates.
 
-    Handles the complex logic of merging anonymous browsing history with
+    Handles the logic of merging anonymous browsing history with
     authenticated user accounts. If the user has an existing canonical
     identity, anonymous touchpoints and conversions are transferred to it.
     If not, the current anonymous identity becomes the user's canonical
@@ -131,12 +130,10 @@ def _create_canonical_identity_for_user(
     request: AttributionHttpRequest,
 ) -> Identity:
     user_agent = request.META.get("HTTP_USER_AGENT", "")
-    ip_address = extract_client_ip(request)
 
     identity = Identity.objects.create(
         linked_user=user,
-        ip_address=ip_address,
-        user_agent=user_agent,
+        first_visit_user_agent=user_agent,
     )
     logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
     return identity

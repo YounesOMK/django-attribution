@@ -44,12 +44,6 @@ dev = [
     "tox>=4.0",
     "pre-commit>=3.0",
 ]
-docs = [
-    "sphinx>=5.0",
-    "sphinx-rtd-theme>=1.0",
-    "myst-parser>=0.18",
-]
-
 
 [tool.hatch.version]
 path = "django_attribution/__init__.py"
