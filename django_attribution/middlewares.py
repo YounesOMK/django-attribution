@@ -4,8 +4,6 @@ from urllib.parse import unquote_plus
 
 from django.http import HttpResponse
 
-from django_attribution.utils import extract_client_ip
-
 from .conf import attribution_settings
 from .mixins import RequestExclusionMixin
 from .models import Identity, Touchpoint
@@ -107,7 +105,9 @@ class AttributionMiddleware:
         response = self.get_response(request)
 
         if request.identity:
-            if self._has_tracking_data(request):
+            if self._has_tracking_data(request) and self._is_successful_response(
+                response
+            ):
                 self._record_touchpoint(request.identity, request)
             self.tracker.apply_to_response(request, response)
 
@@ -130,8 +130,7 @@ class AttributionMiddleware:
     ) -> Identity:
         if not current_identity:
             new_identity = Identity.objects.create(
-                ip_address=extract_client_ip(request),
-                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                first_visit_user_agent=request.META.get("HTTP_USER_AGENT", ""),
             )
             self.tracker.set_identity(new_identity)
             logger.info(f"Created new anonymous identity {new_identity.uuid}")
@@ -184,6 +183,9 @@ class AttributionMiddleware:
     def _has_tracking_data(self, request: AttributionHttpRequest) -> bool:
         tracking_params = request.META.get("tracking_params", {})
         return bool(tracking_params)
+
+    def _is_successful_response(self, response: HttpResponse) -> bool:
+        return response.status_code >= 200 and response.status_code < 300
 
     def _has_tracking_header(self, request: AttributionHttpRequest) -> bool:
         return bool(request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER))

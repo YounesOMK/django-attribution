@@ -22,47 +22,17 @@ def test_decorator_sets_allowed_conversion_events(make_request):
     assert response.status_code == 200
 
 
-def test_decorator_sets_require_identity_flag_default_true(make_request):
-    request = make_request("/test/")
-
-    @conversion_events("purchase")
-    def test_view(request):
-        assert hasattr(request, "_require_identity_for_conversions")
-        assert request._require_identity_for_conversions is True
-        return HttpResponse("OK")
-
-    response = test_view(request)
-
-    assert response.status_code == 200
-
-
-def test_decorator_sets_require_identity_flag_explicit_false(make_request):
-    request = make_request("/test/")
-
-    @conversion_events("newsletter_signup", require_identity=False)
-    def test_view(request):
-        assert hasattr(request, "_require_identity_for_conversions")
-        assert request._require_identity_for_conversions is False
-        return HttpResponse("OK")
-
-    response = test_view(request)
-
-    assert response.status_code == 200
-
-
 def test_decorator_cleans_up_request_attributes_after_execution(make_request):
     request = make_request("/test/")
 
     @conversion_events("signup", "purchase")
     def test_view(request):
         assert hasattr(request, "_allowed_conversion_events")
-        assert hasattr(request, "_require_identity_for_conversions")
         return HttpResponse("OK")
 
     response = test_view(request)
 
     assert not hasattr(request, "_allowed_conversion_events")
-    assert not hasattr(request, "_require_identity_for_conversions")
     assert response.status_code == 200
 
 
@@ -72,14 +42,12 @@ def test_decorator_cleans_up_request_attributes_even_on_exception(make_request):
     @conversion_events("signup")
     def test_view(request):
         assert hasattr(request, "_allowed_conversion_events")
-        assert hasattr(request, "_require_identity_for_conversions")
         raise ValueError("Test exception")
 
     with pytest.raises(ValueError, match="Test exception"):
         test_view(request)
 
     assert not hasattr(request, "_allowed_conversion_events")
-    assert not hasattr(request, "_require_identity_for_conversions")
 
 
 @pytest.mark.django_db
@@ -90,14 +58,11 @@ def test_decorator_with_no_events_specified_allows_all(make_request):
     def test_view(request):
         assert hasattr(request, "_allowed_conversion_events")
         assert request._allowed_conversion_events is None
-        assert hasattr(request, "_require_identity_for_conversions")
-        assert request._require_identity_for_conversions is True  # Default
         return HttpResponse("OK")
 
     response = test_view(request)
 
     assert not hasattr(request, "_allowed_conversion_events")
-    assert not hasattr(request, "_require_identity_for_conversions")
     assert response.status_code == 200
 
 
@@ -107,13 +72,11 @@ def test_decorator_with_single_event(make_request):
     @conversion_events("purchase")
     def test_view(request):
         assert request._allowed_conversion_events == {"purchase"}
-        assert request._require_identity_for_conversions is True
         return HttpResponse("OK")
 
     response = test_view(request)
 
     assert not hasattr(request, "_allowed_conversion_events")
-    assert not hasattr(request, "_require_identity_for_conversions")
     assert response.status_code == 200
 
 
@@ -143,5 +106,4 @@ def test_decorator_cleanup_handles_missing_attributes_gracefully(make_request):
     response = test_view(request)
 
     assert not hasattr(request, "_allowed_conversion_events")
-    assert not hasattr(request, "_require_identity_for_conversions")
     assert response.status_code == 200

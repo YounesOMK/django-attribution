@@ -16,4 +16,3 @@ class AttributionHttpRequest(HttpRequest):
     identity_tracker: "CookieIdentityTracker"
     identity: Optional["Identity"]
     _allowed_conversion_events: Optional[Set[str]]
-    _require_identity_for_conversions: bool

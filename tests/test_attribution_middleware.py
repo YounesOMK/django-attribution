@@ -110,7 +110,7 @@ def test_anonymous_user_with_existing_identity_logs_in_links_identity_to_account
     authenticated_user,
 ):
     existing_identity = Identity.objects.create(
-        ip_address="192.168.1.1", user_agent="Mozilla/5.0...", linked_user=None
+        first_visit_user_agent="Mozilla/5.0...", linked_user=None
     )
 
     Touchpoint.objects.create(
@@ -200,8 +200,7 @@ def test_merge_identities_on_login_with_anonymous_identity(
 ):
     canonical_identity = Identity.objects.create(
         linked_user=authenticated_user,
-        ip_address="10.0.0.1",
-        user_agent="Previous Device",
+        first_visit_user_agent="Previous Device",
     )
 
     Touchpoint.objects.create(
@@ -213,8 +212,7 @@ def test_merge_identities_on_login_with_anonymous_identity(
 
     anonymous_identity = Identity.objects.create(
         linked_user=None,  # Anonymous
-        ip_address="192.168.1.100",
-        user_agent="New Device",
+        first_visit_user_agent="New Device",
     )
 
     Touchpoint.objects.create(
@@ -273,8 +271,7 @@ def test_returning_visitor_with_new_utm(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     existing_identity = Identity.objects.create(
-        ip_address="192.168.1.1",
-        user_agent="Mozilla/5.0...",
+        first_visit_user_agent="Mozilla/5.0...",
         linked_user=None,  # Anonymous
     )
 
@@ -332,8 +329,7 @@ def test_returning_visitor_with_valid_cookie_no_utm_reuses_identity_no_touchpoin
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     existing_identity = Identity.objects.create(
-        ip_address="192.168.1.1",
-        user_agent="Mozilla/5.0...",
+        first_visit_user_agent="Mozilla/5.0...",
         linked_user=None,  # Anonymous
     )
 
@@ -379,7 +375,7 @@ def test_returning_visitor_with_corrupted_cookie_creates_fresh_identity(
     attribution_middleware, tracking_parameter_middleware, make_request
 ):
     old_identity = Identity.objects.create(
-        ip_address="10.0.0.1", user_agent="Old Browser", linked_user=None
+        first_visit_user_agent="Old Browser", linked_user=None
     )
 
     request = make_request(
@@ -433,20 +429,17 @@ def test_user_with_multiple_identities_consolidates_to_canonical_identity(
 ):
     canonical_identity = Identity.objects.create(
         linked_user=authenticated_user,
-        ip_address="10.0.0.1",
-        user_agent="Previous Device",
+        first_visit_user_agent="Previous Device",
     )
 
     anonymous_identity = Identity.objects.create(
         linked_user=None,  # Anonymous browsing
-        ip_address="192.168.1.100",
-        user_agent="New Device",
+        first_visit_user_agent="New Device",
     )
 
     old_merged_identity = Identity.objects.create(
         linked_user=authenticated_user,
         merged_into=canonical_identity,
-        ip_address="172.16.0.1",
     )
 
     request = make_request("/welcome-back/")
@@ -488,9 +481,7 @@ def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge
     make_request,
     authenticated_user,
 ):
-    canonical_identity = Identity.objects.create(
-        linked_user=authenticated_user, ip_address="10.0.0.1"
-    )
+    canonical_identity = Identity.objects.create(linked_user=authenticated_user)
 
     Touchpoint.objects.create(
         identity=canonical_identity,
@@ -503,9 +494,7 @@ def test_touchpoints_and_conversions_transfer_to_canonical_identity_during_merge
         identity=canonical_identity, event="signup", conversion_value=0
     )
 
-    anonymous_identity = Identity.objects.create(
-        linked_user=None, ip_address="192.168.1.100"
-    )
+    anonymous_identity = Identity.objects.create(linked_user=None)
 
     Touchpoint.objects.create(
         identity=anonymous_identity,
@@ -576,11 +565,11 @@ def test_cookie_updates_to_canonical_identity_uuid_after_reconciliation(
     authenticated_user,
 ):
     canonical_identity = Identity.objects.create(
-        linked_user=authenticated_user, ip_address="10.0.0.1", user_agent="Desktop"
+        linked_user=authenticated_user, first_visit_user_agent="Desktop"
     )
 
     anonymous_identity = Identity.objects.create(
-        linked_user=None, ip_address="192.168.1.50", user_agent="Mobile"
+        linked_user=None, first_visit_user_agent="Mobile"
     )
 
     canonical_uuid = str(canonical_identity.uuid)
@@ -620,7 +609,7 @@ def test_user_with_no_existing_canonical_identity_promotes_anonymous_to_canonica
     authenticated_user,
 ):
     anonymous_identity = Identity.objects.create(
-        linked_user=None, ip_address="192.168.1.75", user_agent="Chrome"
+        linked_user=None, first_visit_user_agent="Chrome"
     )
 
     Touchpoint.objects.create(

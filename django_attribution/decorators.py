@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 
-def conversion_events(*events: str, require_identity: bool = True):
+def conversion_events(*events: str):
     """
     Decorator to restrict which conversion events can be recorded in a view.
 
@@ -17,10 +17,9 @@ def conversion_events(*events: str, require_identity: bool = True):
 
     Args:
         *events: Allowed conversion event names
-        require_identity: Whether identity is required for conversions
 
     Usage:
-        @conversion_events('purchase', 'signup', require_identity=True)
+        @conversion_events('purchase', 'signup')
         def checkout_view(request):
             record_conversion(request, 'purchase', value=99.99)
     """
@@ -33,7 +32,6 @@ def conversion_events(*events: str, require_identity: bool = True):
             django_request = getattr(request, "_request", request)
 
             django_request._allowed_conversion_events = allowed_events
-            django_request._require_identity_for_conversions = require_identity
 
             try:
                 response = func(request, *args, **kwargs)
@@ -41,8 +39,6 @@ def conversion_events(*events: str, require_identity: bool = True):
                 # Clean up
                 if hasattr(django_request, "_allowed_conversion_events"):
                     delattr(django_request, "_allowed_conversion_events")
-                if hasattr(django_request, "_require_identity_for_conversions"):
-                    delattr(django_request, "_require_identity_for_conversions")
 
             return response
 

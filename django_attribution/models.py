@@ -50,8 +50,7 @@ class Identity(BaseModel):
     Attributes:
         merged_into: Reference to canonical identity if this one was merged
         linked_user: Django User this identity belongs to (if authenticated)
-        user_agent: Browser user agent string from first visit
-        ip_address: IP address from first visit
+        first_visit_user_agent: Browser user agent string from first visit
     """
 
     merged_into = models.ForeignKey(
@@ -70,8 +69,7 @@ class Identity(BaseModel):
         related_name="attribution_identities",
     )
 
-    user_agent = models.TextField(blank=True)
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    first_visit_user_agent = models.TextField(blank=True)
 
     objects = models.Manager.from_queryset(IdentityQuerySet)()
 

@@ -49,7 +49,7 @@ DEFAULTS = {
         "redditbot",
         "ia_archiver",
     ],
-    # Attribution Window & Currency
+    # Currency
     "CURRENCY": "EUR",
     # URL Exclusion Configuration
     "UTM_EXCLUDED_URLS": [
