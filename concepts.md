@@ -1,4 +1,4 @@
-django-attribution tracks which marketing campaigns drive events. When someone visits your site from a campaign link, you capture where they came from. Later, when they perform an event, you can see which campaign deserves credit.
+django-attribution tracks which marketing campaigns drive conversions. When someone visits your site from a campaign link, you capture where they came from. Later, when they perform a conversion, you can see which campaign deserves credit.
 
 ## Core Concepts
 
