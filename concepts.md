@@ -2,7 +2,7 @@
 
 ## Attribution Tracking
 
-Attribution tracks which marketing campaigns drive conversions. When someone visits your site from a campaign link, you capture where they came from. Later, when they convert, you can see which campaign deserves credit.
+django-attribution tracks which marketing campaigns drive conversions. When someone visits your site from a campaign link, you capture where they came from. Later, when they convert, you can see which campaign deserves credit.
 
 ## Identity
 
