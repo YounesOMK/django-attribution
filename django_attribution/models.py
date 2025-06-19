@@ -88,7 +88,7 @@ class Identity(BaseModel):
                 name="unique_canonical_identity_per_user",
             ),
             models.CheckConstraint(
-                check=~models.Q(merged_into=models.F("id")),
+                condition=~models.Q(merged_into=models.F("id")),
                 name="prevent_self_merge",
             ),
         ]

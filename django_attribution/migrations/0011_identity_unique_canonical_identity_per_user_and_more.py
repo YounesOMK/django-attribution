@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="identity",
             constraint=models.CheckConstraint(
-                check=models.Q(("merged_into", models.F("id")), _negated=True),
+                condition=models.Q(("merged_into", models.F("id")), _negated=True),
                 name="prevent_self_merge",
             ),
         ),
