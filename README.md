@@ -146,7 +146,7 @@ from django_attribution.models import Conversion
 from django_attribution.attribution_models import first_touch, last_touch
 
 # Last-touch attribution (most recent campaign gets credit)
-conversions = Conversion.objects.with_attribution(last_touch)
+conversions = Conversion.objects.valid().with_attribution(last_touch) # .valid() = is_active + is_confrimed
 
 for conversion in conversions:
     print(f"Conversion: {conversion.event}")
@@ -154,10 +154,10 @@ for conversion in conversions:
     print(f"Campaign: {conversion.attribution_data.get('utm_campaign')}")
 
 # First-touch attribution (first campaign gets credit)
-conversions = Conversion.objects.with_attribution(first_touch)
+conversions = Conversion.objects.valid().with_attribution(first_touch)
 
 # Custom attribution window (default is 30 days)
-conversions = Conversion.objects.with_attribution(last_touch, window_days=7)
+conversions = Conversion.objects.valid().with_attribution(last_touch, window_days=7)
 
 # Different windows per source
 source_windows = {
