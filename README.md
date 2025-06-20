@@ -22,7 +22,7 @@ An identity can be:
 A touchpoint captures where someone came from when they visit your site with tracking data.
 
 Includes:
-- UTM parameters (`utm_source=google`, `utm_campaign=summer_sale`)  
+- UTM parameters (`utm_source=google`, `utm_campaign=summer_sale`)
 - Click IDs (`gclid`, `fbclid`, etc.)
 - URL they landed on and referrer
 </details>
@@ -42,6 +42,24 @@ A conversion is when someone does something valuable - signs up, makes a purchas
 
 ```bash
 pip install django-attribution
+```
+
+## Django Configuration
+
+Add `django_attribution` to your `INSTALLED_APPS` in your Django settings:
+
+```python
+INSTALLED_APPS = [
+    # ... other apps ...
+    "django_attribution",
+    # ... other apps ...
+]
+```
+
+Run migrations to create the database tables:
+
+```bash
+python manage.py migrate
 ```
 
 ## Middleware Configuration
@@ -86,10 +104,10 @@ def signup_view(request):
 def order_view(request):
     # ... order processing ...
     order = Order.objects.create(total=99.99)
-    
+
     record_conversion(
-        request, 
-        'order_placed', 
+        request,
+        'order_placed',
         value=order.total,
         source_object=order,  # Link to order for later reference
         is_confirmed=False
@@ -99,7 +117,7 @@ def order_view(request):
 def payment_webhook(request):
     # ... payment processing ...
     order = Order.objects.get(id=order_id)
-    
+
     # Find and confirm the conversion
     conversion = Conversion.objects.get(
         source_content_type=ContentType.objects.get_for_model(Order),
@@ -128,7 +146,7 @@ def my_view(request):
 # Class-based view
 class CheckoutView(ConversionEventsMixin, View):
     conversion_events = ['purchase']
-    
+
     def post(self, request):
         record_conversion(request, 'purchase')  # Allowed
         record_conversion(request, 'signup')  # Raises ValueError
@@ -139,7 +157,7 @@ class CheckoutView(ConversionEventsMixin, View):
 The `record_conversion` function accepts:
 
 - `request`: Django request object (also drf compatible)
-- `event_type`: Conversion event name (required) 
+- `event_type`: Conversion event name (required)
 - `value`: Monetary value (optional)
 - `currency`: Currency code (optional, defaults to settings)
 - `custom_data`: Additional metadata (optional)
@@ -175,7 +193,7 @@ source_windows = {
 }
 
 conversions = Conversion.objects.with_attribution(
-    last_touch, 
+    last_touch,
     window_days=30,  # default window
     source_windows=source_windows
 )
@@ -188,19 +206,19 @@ Optional settings to customize behavior in your Django `settings.py`:
 ```python
 DJANGO_ATTRIBUTION = {
     "CURRENCY": "USD",
-    
+
     # Cookie settings
     "COOKIE_MAX_AGE": 60 * 60 * 24 * 90,  # 90 days
     "COOKIE_NAME": "_dj_attr_id",
-    
+
     "FILTER_BOTS": True,
-    
+
     # Skip tracking utm params on these URLs
     "UTM_EXCLUDED_URLS": [
         "/admin/",
         "/api/",
     ],
-    
+
     # Max length for UTM parameters
     "MAX_UTM_LENGTH": 200,
 }
