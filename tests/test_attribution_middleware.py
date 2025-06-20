@@ -74,35 +74,6 @@ def test_new_anonymous_visitor_without_tracking_parameters_creates_nothing(
 
 
 @pytest.mark.django_db
-def test_new_anon_visitor_with_attribution_header_creates_identity_without_touchpoint(
-    attribution_middleware, tracking_parameter_middleware, make_request
-):
-    request = make_request("/api-endpoint/")
-    request.user = AnonymousUser()
-
-    request.META[attribution_settings.ATTRIBUTION_TRIGGER_HEADER] = "any_value"
-
-    tracking_parameter_middleware(request)
-
-    with patch.object(
-        attribution_middleware.tracker, "get_identity_reference", return_value=None
-    ):
-        response = attribution_middleware(request)
-
-    assert Identity.objects.count() == 1
-    assert Touchpoint.objects.count() == 0  # No touchpoint without UTM data
-
-    identity = Identity.objects.first()
-    assert identity is not None
-    assert identity.linked_user is None  # Anonymous
-    assert identity.is_canonical() is True
-
-    cookie_name = attribution_settings.COOKIE_NAME
-    assert cookie_name in response.cookies
-    assert response.cookies[cookie_name].value == str(identity.uuid)
-
-
-@pytest.mark.django_db
 def test_anonymous_user_with_existing_identity_logs_in_links_identity_to_account(
     attribution_middleware,
     tracking_parameter_middleware,

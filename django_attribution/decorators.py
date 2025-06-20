@@ -29,16 +29,15 @@ def conversion_events(*events: str):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(request, *args, **kwargs):
-            django_request = getattr(request, "_request", request)
-
-            django_request._allowed_conversion_events = allowed_events
+            # Set allowed conversion events directly on the request
+            request._allowed_conversion_events = allowed_events
 
             try:
                 response = func(request, *args, **kwargs)
             finally:
                 # Clean up
-                if hasattr(django_request, "_allowed_conversion_events"):
-                    delattr(django_request, "_allowed_conversion_events")
+                if hasattr(request, "_allowed_conversion_events"):
+                    delattr(request, "_allowed_conversion_events")
 
             return response
 

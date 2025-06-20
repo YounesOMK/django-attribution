@@ -75,19 +75,6 @@ MIDDLEWARE = [
 ]
 ```
 
-## JSON API Setup
-
-For APIs with separate frontends, skip `TrackingParameterMiddleware` and only use:
-
-```python
-MIDDLEWARE = [
-    "django_attribution.middlewares.AttributionMiddleware",
-]
-```
-
-Create an endpoint for your frontend to send UTM parameters with the `X-Attribution-Trigger` header. Frontend and backend must share the same domain for cookie tracking.
-
-
 ## Usage
 
 ### Recording Conversions

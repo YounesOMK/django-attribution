@@ -74,14 +74,13 @@ class ConversionQuerySet(BaseQuerySet):
             ValueError: If event is not in allowed_conversion_events list
         """
 
-        django_request = getattr(request, "_request", request)
-
+        # Check for allowed conversion events and get current identity
         allowed_events = getattr(
-            django_request,
+            request,
             "_allowed_conversion_events",
             None,
         )
-        current_identity = django_request.identity
+        current_identity = request.identity
 
         if allowed_events is not None and event not in allowed_events:
             logger.warning(

@@ -187,11 +187,8 @@ class AttributionMiddleware:
     def _is_successful_response(self, response: HttpResponse) -> bool:
         return response.status_code >= 200 and response.status_code < 300
 
-    def _has_tracking_header(self, request: AttributionHttpRequest) -> bool:
-        return bool(request.META.get(attribution_settings.ATTRIBUTION_TRIGGER_HEADER))
-
     def _has_attribution_trigger(self, request: AttributionHttpRequest) -> bool:
-        return self._has_tracking_data(request) or self._has_tracking_header(request)
+        return self._has_tracking_data(request)
 
     def _should_resolve_identity(
         self,

@@ -64,6 +64,4 @@ DEFAULTS = {
     "COOKIE_SECURE": None,  # Auto-detect
     "COOKIE_HTTPONLY": True,
     "COOKIE_SAMESITE": "Lax",
-    # Attribution Trigger Configuration
-    "ATTRIBUTION_TRIGGER_HEADER": "HTTP_X_ATTRIBUTION_TRIGGER",
 }
