@@ -33,6 +33,7 @@ class BaseModel(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         abstract = True
