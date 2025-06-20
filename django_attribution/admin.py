@@ -80,7 +80,6 @@ class IdentityAdmin(admin.ModelAdmin):
     )
 
     inlines = [TouchpointInline, ConversionInline]
-    autocomplete_fields = ["linked_user"]
     date_hierarchy = "created_at"
     ordering = (
         "merged_into",

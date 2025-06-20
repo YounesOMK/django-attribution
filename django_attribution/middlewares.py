@@ -150,7 +150,7 @@ class AttributionMiddleware:
         current_identity: Optional[Identity],
     ) -> Identity:
         if not current_identity or current_identity.linked_user != request.user:
-            logger.info(f"Reconciling identity for user {request.user.id}")
+            logger.info(f"Reconciling identity for user {request.user.pk}")
             return self._reconcile_user_identity(request)
 
         canonical = current_identity.get_canonical_identity()

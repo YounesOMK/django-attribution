@@ -1,7 +1,7 @@
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from django_attribution.models import Identity
@@ -9,6 +9,11 @@ from django_attribution.trackers import CookieIdentityTracker
 from django_attribution.types import AttributionHttpRequest
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
+
+User = get_user_model()
 
 
 __all__ = ["reconcile_user_identity"]
@@ -51,7 +56,7 @@ def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
 
     if not current_identity:
         if not user_canonical_identity:
-            logger.info(f"Creating new canonical identity for user {user.id}")
+            logger.info(f"Creating new canonical identity for user {user.pk}")
 
         return user_canonical_identity or _create_canonical_identity_for_user(
             user, request
@@ -64,18 +69,18 @@ def _resolve_user_identity(request: AttributionHttpRequest) -> Identity:
         if user_canonical_identity:
             logger.info(
                 f"Merging anonymous identity {current_identity.uuid} "
-                f"into user {user.id}'s canonical identity"
+                f"into user {user.pk}'s canonical identity"
             )
             _merge_identity_to_canonical(current_identity, user_canonical_identity)
             return user_canonical_identity
 
-        logger.info(f"Linking identity {current_identity.uuid} to user {user.id}")
+        logger.info(f"Linking identity {current_identity.uuid} to user {user.pk}")
         current_identity.linked_user = user
         current_identity.save(update_fields=["linked_user"])
         return current_identity
 
     if not user_canonical_identity:
-        logger.info(f"Creating new canonical identity for user {user.id}")
+        logger.info(f"Creating new canonical identity for user {user.pk}")
         return _create_canonical_identity_for_user(user, request)
 
     return user_canonical_identity
@@ -100,9 +105,9 @@ def _merge_identity_to_canonical(source: Identity, canonical: Identity) -> None:
     source.merged_identities.update(merged_into=canonical)
 
 
-def _find_user_canonical_identity(user: User) -> Optional[Identity]:
+def _find_user_canonical_identity(user: "AbstractUser") -> Optional[Identity]:
     user_identities = Identity.objects.filter(
-        linked_user=user,
+        linked_user=user,  # type: ignore
         merged_into__isnull=True,
     ).oldest_first()
 
@@ -126,14 +131,14 @@ def _get_current_identity_from_request(
 
 
 def _create_canonical_identity_for_user(
-    user: User,
+    user: "AbstractUser",
     request: AttributionHttpRequest,
 ) -> Identity:
     user_agent = request.META.get("HTTP_USER_AGENT", "")
 
     identity = Identity.objects.create(
-        linked_user=user,
+        linked_user=user,  # type: ignore
         first_visit_user_agent=user_agent,
     )
-    logger.info(f"Created new canonical identity {identity.uuid} for user {user.id}")
+    logger.info(f"Created new canonical identity {identity.uuid} for user {user.pk}")
     return identity

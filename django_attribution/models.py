@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -62,7 +63,7 @@ class Identity(BaseModel):
     )
 
     linked_user = models.ForeignKey(
-        "auth.User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -93,7 +94,7 @@ class Identity(BaseModel):
 
     def __str__(self):
         if self.linked_user:
-            return f"Identity {self.uuid} (User: {self.linked_user.username})"
+            return f"Identity {self.uuid} (User: {self.linked_user.get_username()})"
         return f"Identity {self.uuid} (Anonymous)"
 
     def get_canonical_identity(self):
