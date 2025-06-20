@@ -1,7 +1,7 @@
 # django-attribution
 [![codecov](https://codecov.io/gh/YounesOMK/django-attribution/graph/badge.svg?token=86H7I1BS5K)](https://codecov.io/gh/YounesOMK/django-attribution)
 
-Track UTM parameters and marketing campaigns to identify which sources drive conversions and revenue.
+Track UTM parameters and marketing campaigns to identify which sources drive conversions and revenue
 
 
 # Core Concepts
