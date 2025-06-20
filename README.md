@@ -57,8 +57,17 @@ MIDDLEWARE = [
 ]
 ```
 
-**Note:** You can skip `TrackingParameterMiddleware` if your Django app is a JSON-based API with a separate frontend
+## JSON API Setup
 
+For APIs with separate frontends, skip `TrackingParameterMiddleware` and only use:
+
+```python
+MIDDLEWARE = [
+    "django_attribution.middlewares.AttributionMiddleware",
+]
+```
+
+Create an endpoint for your frontend to send UTM parameters with the `X-Attribution-Trigger` header. Frontend and backend must share the same domain for cookie tracking.
 
 
 ## Usage
@@ -73,7 +82,7 @@ def signup_view(request):
     # ... signup logic ...
     record_conversion(request, 'signup')
 
-# Async flow with confirmation
+# Two-step flow with confirmation
 def order_view(request):
     # ... order processing ...
     order = Order.objects.create(total=99.99)
@@ -129,7 +138,7 @@ class CheckoutView(ConversionEventsMixin, View):
 
 The `record_conversion` function accepts:
 
-- `request`: Django request object (required)
+- `request`: Django request object (also drf compatible)
 - `event_type`: Conversion event name (required) 
 - `value`: Monetary value (optional)
 - `currency`: Currency code (optional, defaults to settings)
