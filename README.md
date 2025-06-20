@@ -143,7 +143,7 @@ class CheckoutView(ConversionEventsMixin, View):
 
 The `record_conversion` function accepts:
 
-- `request`: Django request object (also drf compatible)
+- `request`: Django request object
 - `event_type`: Conversion event name (required)
 - `value`: Monetary value (optional)
 - `currency`: Currency code (optional, defaults to settings)
