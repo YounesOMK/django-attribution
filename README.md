@@ -1,5 +1,8 @@
 # django-attribution
-[![codecov](https://codecov.io/gh/YounesOMK/django-attribution/graph/badge.svg?token=86H7I1BS5K)](https://codecov.io/gh/YounesOMK/django-attribution)
+[![PyPI version](https://img.shields.io/pypi/v/django-attribution.svg?style=flat-square&color=green)](https://pypi.org/project/django-attribution/)
+[![codecov](https://img.shields.io/codecov/c/github/YounesOMK/django-attribution?style=flat-square)](https://codecov.io/gh/YounesOMK/django-attribution)
+
+
 
 Track UTM parameters and marketing campaigns to identify which sources drive conversions and revenue
 
@@ -47,8 +50,6 @@ pip install django-attribution
 
 ## Django Configuration
 
-Add `django_attribution` to your `INSTALLED_APPS` in your Django settings:
-
 ```python
 INSTALLED_APPS = [
     # ... other apps ...
@@ -57,15 +58,9 @@ INSTALLED_APPS = [
 ]
 ```
 
-Run migrations to create the database tables:
-
 ```bash
 python manage.py migrate
 ```
-
-## Middleware Configuration
-
-Add these middlewares to your Django `MIDDLEWARE` setting:
 
 ```python
 MIDDLEWARE = [
