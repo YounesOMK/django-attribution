@@ -71,7 +71,7 @@ dependencies = [
 [tool.hatch.envs.default.scripts]
 # Testing
 test = "pytest {args}"
-test-cov = "coverage run -m pytest {args}"
+test-cov = "pytest --cov=django_attribution --cov-report=xml --cov-report=term {args}"
 cov-report = [
     "- coverage combine",
     "coverage report",
